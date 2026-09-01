@@ -1,0 +1,13 @@
+{
+  "audit_timestamp": "2026-09-01T15:52:57.912161+00:00",
+  "total_samples_audited": 4,
+  "split_counts": {
+    "train": 2,
+    "dev": 1,
+    "test": 1
+  },
+  "total_violations": 0,
+  "critical_violations": 0,
+  "source_video_leakage_detected": false,
+  "violations": []
+}
