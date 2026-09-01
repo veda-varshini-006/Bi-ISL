@@ -1,0 +1,20 @@
+{
+  "summary": {
+    "num_evaluated_samples": 1,
+    "mean_intent_preservation": 1.0,
+    "mean_semantic_correctness": 1.0,
+    "mean_isl_ordering_correctness": 1.0,
+    "mean_non_manual_marker_correctness": 1.0,
+    "mean_unsupported_oov_handling": 1.0,
+    "overall_quality_score": 1.0
+  },
+  "human_evaluation_rubric": {
+    "rubric_title": "ISL-Competent Expert Human Evaluation Protocol",
+    "evaluator_qualification": "ISL-competent evaluator (deaf native signer or certified interpreter)",
+    "qualitative_dimensions": {
+      "facial_expression_naturalness": "Scale 1-5 rating naturalness of eyebrow/mouth co-articulation",
+      "signing_flow_coarticulation": "Scale 1-5 rating transition smoothness between sign loci",
+      "semantic_faithfulness": "Scale 1-5 rating intent retention without medical distortion"
+    }
+  }
+}

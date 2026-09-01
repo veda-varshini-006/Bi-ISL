@@ -1,0 +1,97 @@
+{
+  "taxonomy_version": "1.0.0",
+  "categories_count": 7,
+  "categories": [
+    "eyebrow_movement",
+    "head_movement",
+    "facial_expression",
+    "mouth_pattern",
+    "body_lean",
+    "question_markers",
+    "negation"
+  ],
+  "taxonomy": {
+    "eyebrow_movement": {
+      "eyebrows_furrowed": {
+        "description": "Furrowed eyebrows for WH-questions (where, when, who, why)",
+        "citation": "Zeshan (2004) Hand shape and Non-manuals in ISL Syntax"
+      },
+      "eyebrows_raised": {
+        "description": "Raised eyebrows for Topic marking and Yes/No questions",
+        "citation": "Vasishta et al. (1985) An Introduction to ISL"
+      }
+    },
+    "head_movement": {
+      "head_nod_slight": {
+        "description": "Slight forward head nod for affirmative declarative statements",
+        "citation": "ISLRTC Technical Guidelines (2020) Non-manual Grammar"
+      },
+      "head_shake_negation": {
+        "description": "Side-to-side headshake co-occurring with negative signs/predicates",
+        "citation": "Zeshan (2004) Negation in Indian Sign Language"
+      },
+      "head_tilt": {
+        "description": "Head tilt indicating inquiry or spatial referent orientation",
+        "citation": "ISLRTC Guidelines (2020)"
+      }
+    },
+    "facial_expression": {
+      "eyes_wide_expressive": {
+        "description": "Wide open eyes for emergency or high urgency signals",
+        "citation": "Vasishta et al. (1985)"
+      },
+      "squint_intense": {
+        "description": "Squinting for intense focus or symptom severity description",
+        "citation": "Zeshan (2004)"
+      },
+      "neutral_facial": {
+        "description": "Neutral facial posture for baseline declarative turns",
+        "citation": "ISLRTC Guidelines (2020)"
+      }
+    },
+    "mouth_pattern": {
+      "mouth_open_ah": {
+        "description": "Open mouth 'ah' shape for intensity or spatial scope",
+        "citation": "ISLRTC Technical Guidelines (2020)"
+      },
+      "mouth_closed_flat": {
+        "description": "Flat closed mouth posture",
+        "citation": "ISLRTC Guidelines (2020)"
+      },
+      "mouth_mouthing_gloss": {
+        "description": "Silent English word mouthing for technical/medical terms",
+        "citation": "Zeshan (2004) Mouthing in ISL"
+      }
+    },
+    "body_lean": {
+      "body_lean_forward": {
+        "description": "Forward upper body lean for question engagement",
+        "citation": "Zeshan (2004)"
+      },
+      "body_lean_back": {
+        "description": "Backward body lean for contrastive topic or hesitation",
+        "citation": "Vasishta et al. (1985)"
+      }
+    },
+    "question_markers": {
+      "q_marker_wh": {
+        "description": "Question marker for content questions (WH)",
+        "citation": "Zeshan (2004) ISL Interrogatives"
+      },
+      "q_marker_yn": {
+        "description": "Question marker for polar confirmation questions (Yes/No)",
+        "citation": "ISLRTC Guidelines (2020)"
+      }
+    },
+    "negation": {
+      "neg_marker_headshake": {
+        "description": "Explicit negation marker combining headshake and NO gloss",
+        "citation": "Zeshan (2004)"
+      },
+      "neg_marker_absence": {
+        "description": "Absence negation marker for non-existent symptom/item",
+        "citation": "ISLRTC Guidelines (2020)"
+      }
+    }
+  }
+}

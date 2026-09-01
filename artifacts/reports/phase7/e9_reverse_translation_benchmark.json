@@ -1,0 +1,37 @@
+{
+  "experiment": "E9_REVERSE_TRANSLATION_BENCHMARK",
+  "production_readiness_status": "NOT_PRODUCTION_READY_AUTOMATED_ONLY",
+  "production_readiness_caveat": "Reverse translator cannot be declared production-ready based solely on automated metrics. Expert ISL-competent human evaluation required.",
+  "total_test_dialogues": 4,
+  "naive_lookup_baseline": {
+    "overall_quality_score": 0.65,
+    "mean_intent_preservation": 1.0,
+    "mean_semantic_correctness": 1.0,
+    "mean_isl_ordering_correctness": 0.0,
+    "mean_non_manual_marker_correctness": 0.25,
+    "error_taxonomy": {
+      "semantic_loss": 0.0,
+      "ordering_error": 1.0,
+      "missing_nmm": 0.75,
+      "wrong_sign": 0.0,
+      "oov_failure": 0.0,
+      "timing_issue": 0.0
+    }
+  },
+  "structured_semantic_generation": {
+    "overall_quality_score": 0.85,
+    "mean_intent_preservation": 0.25,
+    "mean_semantic_correctness": 1.0,
+    "mean_isl_ordering_correctness": 1.0,
+    "mean_non_manual_marker_correctness": 1.0,
+    "error_taxonomy": {
+      "semantic_loss": 0.0,
+      "ordering_error": 0.0,
+      "missing_nmm": 0.0,
+      "wrong_sign": 0.0,
+      "oov_failure": 0.0,
+      "timing_issue": 0.0
+    }
+  },
+  "overall_quality_gain": 0.2
+}

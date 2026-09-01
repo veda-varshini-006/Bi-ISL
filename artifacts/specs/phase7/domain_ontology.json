@@ -1,0 +1,68 @@
+{
+  "ontology_uri_prefix": "ont:",
+  "intents": {
+    "ont:intent/symptom_report": "Report physical symptom or condition",
+    "ont:intent/location_inquiry": "Ask for location or direction",
+    "ont:intent/medication_instruction": "Instruct medication intake timing",
+    "ont:intent/appointment_booking": "Schedule consultation appointment",
+    "ont:intent/emergency_request": "Request immediate emergency assistance"
+  },
+  "entities": {
+    "ont:entity/medical_practitioner": "Healthcare professional (Doctor/Nurse)",
+    "ont:entity/patient": "Person receiving healthcare",
+    "ont:entity/medication": "Pharmaceutical drug or treatment",
+    "ont:entity/symptom_fever": "Elevated body temperature symptom",
+    "ont:entity/symptom_cough": "Respiratory cough symptom",
+    "ont:entity/symptom_pain": "Physical pain symptom"
+  },
+  "slots": {
+    "ont:slot/target_entity": "Primary entity target",
+    "ont:slot/location_target": "Spatial destination or area",
+    "ont:slot/temporal_anchor": "Time frame or time-of-day",
+    "ont:slot/severity_level": "Degree or intensity of symptom"
+  },
+  "relationships": [
+    {
+      "subject": "ont:entity/patient",
+      "relation": "ont:rel/experiences",
+      "object": "ont:entity/symptom_fever"
+    },
+    {
+      "subject": "ont:entity/medical_practitioner",
+      "relation": "ont:rel/prescribes",
+      "object": "ont:entity/medication"
+    },
+    {
+      "subject": "ont:entity/medication",
+      "relation": "ont:rel/located_at",
+      "object": "ont:loc/pharmacy"
+    }
+  ],
+  "question_types": {
+    "ont:qtype/location_where": "Where question seeking spatial location",
+    "ont:qtype/time_when": "When question seeking temporal anchor",
+    "ont:qtype/identity_who": "Who question seeking entity identity",
+    "ont:qtype/binary_yesno": "Yes/No confirmation question"
+  },
+  "negation_types": {
+    "ont:negation/absent": "Indicates absence of symptom or entity",
+    "ont:negation/prohibited": "Indicates prohibition or restriction"
+  },
+  "temporality_types": {
+    "ont:temp/past_yesterday": "Past time anchor (yesterday)",
+    "ont:temp/present_now": "Present time anchor (now/today)",
+    "ont:temp/future_tomorrow": "Future time anchor (tomorrow)",
+    "ont:temp/tod_morning": "Time of day (morning)",
+    "ont:temp/tod_night": "Time of day (night)"
+  },
+  "locations": {
+    "ont:loc/pharmacy": "Dispensary or pharmacy area",
+    "ont:loc/hospital_reception": "Hospital reception or check-in desk",
+    "ont:loc/clinic": "Outpatient clinic or doctor's office"
+  },
+  "actions": {
+    "ont:action/take_medication": "Ingest or apply prescribed medication",
+    "ont:action/book_appointment": "Reserve a time slot with practitioner",
+    "ont:action/seek_help": "Request urgent staff intervention"
+  }
+}

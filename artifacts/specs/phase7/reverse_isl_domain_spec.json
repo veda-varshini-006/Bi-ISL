@@ -1,0 +1,122 @@
+{
+  "domain_name": "ROUTINE_HEALTHCARE_PUBLIC_SERVICE",
+  "intents": [
+    "APPOINTMENT_SCHEDULING",
+    "SYMPTOM_REPORT",
+    "MEDICATION_INQUIRY",
+    "LOCATION_DIRECTION",
+    "REGISTRATION_CHECKIN",
+    "EMERGENCY_ASSISTANCE",
+    "PAYMENT_BILLING",
+    "GENERAL_CLARIFICATION"
+  ],
+  "entities": [
+    "Doctor",
+    "Patient",
+    "Nurse",
+    "Pharmacist",
+    "RegistrationDesk",
+    "Pharmacy",
+    "Fever",
+    "Cough",
+    "Pain",
+    "Medicine",
+    "Morning",
+    "Night"
+  ],
+  "supported_vocabulary_count": 41,
+  "supported_vocabulary": [
+    "doctor",
+    "hospital",
+    "fever",
+    "cough",
+    "pain",
+    "headache",
+    "medicine",
+    "pill",
+    "pharmacy",
+    "today",
+    "tomorrow",
+    "yesterday",
+    "morning",
+    "night",
+    "left",
+    "right",
+    "take",
+    "help",
+    "register",
+    "appointment",
+    "where",
+    "when",
+    "how",
+    "who",
+    "yes",
+    "no",
+    "not",
+    "please",
+    "thank you",
+    "i",
+    "have",
+    "a",
+    "is",
+    "the",
+    "in",
+    "at",
+    "to",
+    "with",
+    "for",
+    "want",
+    "book"
+  ],
+  "unsupported_risk_vocabulary": [
+    "surgery",
+    "chemotherapy",
+    "oncology",
+    "biopsy",
+    "legal lawsuit",
+    "liability",
+    "mortgage",
+    "prescription dosage alteration",
+    "experimental drug"
+  ],
+  "example_dialogues": [
+    {
+      "id": "diag_001",
+      "intent": "SYMPTOM_REPORT",
+      "english": "I have a fever today.",
+      "isl_gloss": "TODAY FEVER HAVE",
+      "entities": [
+        "Fever"
+      ]
+    },
+    {
+      "id": "diag_002",
+      "intent": "LOCATION_DIRECTION",
+      "english": "Where is the pharmacy?",
+      "isl_gloss": "PHARMACY WHERE",
+      "entities": [
+        "Pharmacy"
+      ]
+    },
+    {
+      "id": "diag_003",
+      "intent": "MEDICATION_INQUIRY",
+      "english": "Take medicine in the morning.",
+      "isl_gloss": "MORNING MEDICINE TAKE",
+      "entities": [
+        "Medicine",
+        "Morning"
+      ]
+    },
+    {
+      "id": "diag_004",
+      "intent": "APPOINTMENT_SCHEDULING",
+      "english": "I want to book an appointment with doctor.",
+      "isl_gloss": "DOCTOR APPOINTMENT BOOK WANT",
+      "entities": [
+        "Doctor"
+      ]
+    }
+  ],
+  "risk_boundary_policy": "Strict rejection of complex medical/legal diagnoses with human staff fallback."
+}
