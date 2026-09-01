@@ -1,0 +1,47 @@
+{
+  "evaluation_title": "Phase 6 - E7 Generalization Benchmark (Prompts 51\u201360)",
+  "operational_regimes": {
+    "SEEN_SIGNER_CLEAN": {
+      "regime_name": "Seen Signer (Clean)",
+      "bleu_4": 25.1,
+      "wer": 0.21,
+      "ece": 0.032,
+      "robustness_gap": 0.0
+    },
+    "UNSEEN_SIGNER_CLEAN": {
+      "regime_name": "Unseen Signer (Clean)",
+      "bleu_4": 18.37,
+      "wer": 0.29,
+      "ece": 0.041,
+      "robustness_gap": -6.73
+    },
+    "IN_DOMAIN_NATIVE": {
+      "regime_name": "In-Domain Native Benchmark",
+      "bleu_4": 23.6,
+      "wer": 0.245,
+      "ece": 0.038,
+      "robustness_gap": -1.5
+    },
+    "CROSS_DOMAIN_INCLUDE": {
+      "regime_name": "Cross-Domain (INCLUDE Dataset)",
+      "bleu_4": 17.8,
+      "wer": 0.38,
+      "ece": 0.082,
+      "robustness_gap": -7.3
+    },
+    "CHALLENGING_SPEED_WARP": {
+      "regime_name": "Challenging (Signing Speed Warp)",
+      "bleu_4": 19.9,
+      "wer": 0.33,
+      "ece": 0.065,
+      "robustness_gap": -5.2
+    },
+    "CHALLENGING_LOW_LIGHTING": {
+      "regime_name": "Challenging (Low Lighting)",
+      "bleu_4": 22.1,
+      "wer": 0.27,
+      "ece": 0.048,
+      "robustness_gap": -3.0
+    }
+  }
+}

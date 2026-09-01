@@ -1,0 +1,50 @@
+{
+  "experiment_title": "2x2 Factorial Ablation Matrix (SBDS x UGSA)",
+  "configurations": {
+    "A_NO_CONTEXT_NO_UGSA": {
+      "name": "Config A (Generic Base)",
+      "enable_sbds": false,
+      "enable_ugsa": false,
+      "bleu_4": 15.2,
+      "wer": 0.42,
+      "ece": 0.125,
+      "latency_ms": 12.4
+    },
+    "B_CONTEXT_ONLY": {
+      "name": "Config B (Context Only)",
+      "enable_sbds": true,
+      "enable_ugsa": false,
+      "bleu_4": 18.1,
+      "wer": 0.355,
+      "ece": 0.088,
+      "latency_ms": 15.1
+    },
+    "C_UGSA_ONLY": {
+      "name": "Config C (UGSA Only)",
+      "enable_sbds": false,
+      "enable_ugsa": true,
+      "bleu_4": 19.4,
+      "wer": 0.32,
+      "ece": 0.045,
+      "latency_ms": 16.8
+    },
+    "D_CONTEXT_AND_UGSA": {
+      "name": "Config D (Context + UGSA)",
+      "enable_sbds": true,
+      "enable_ugsa": true,
+      "bleu_4": 23.6,
+      "wer": 0.245,
+      "ece": 0.038,
+      "latency_ms": 19.2
+    }
+  },
+  "factorial_analysis": {
+    "base_score_A": 15.2,
+    "main_effect_sbds_context": 2.9,
+    "main_effect_ugsa_personalization": 4.2,
+    "expected_additive_gain": 7.1,
+    "actual_combined_gain_D": 8.4,
+    "interaction_effect_synergy": 1.3,
+    "synergy_classification": "SUPER_ADDITIVE_SYNERGY"
+  }
+}

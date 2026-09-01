@@ -1,0 +1,52 @@
+{
+  "in_domain_baseline": {
+    "dataset_name": "Bi-ISL-Native",
+    "clean_bleu_4": 23.6,
+    "clean_wer": 0.245
+  },
+  "natural_cross_dataset_shifts": {
+    "INCLUDE_Dataset": {
+      "bleu_4": 17.8,
+      "wer": 0.38,
+      "domain_gap_bleu": -5.8
+    },
+    "ISL_CSLR_Dataset": {
+      "bleu_4": 16.5,
+      "wer": 0.41,
+      "domain_gap_bleu": -7.1
+    }
+  },
+  "synthetic_corruption_shifts": {
+    "LIGHTING_CONTRAST": {
+      "bleu_4": 22.1,
+      "wer": 0.27,
+      "drop_bleu": -1.5
+    },
+    "BACKGROUND_CLUTTER": {
+      "bleu_4": 21.8,
+      "wer": 0.28,
+      "drop_bleu": -1.8
+    },
+    "RESOLUTION_DOWNSAMPLE": {
+      "bleu_4": 20.4,
+      "wer": 0.31,
+      "drop_bleu": -3.2
+    },
+    "CAMERA_ANGLE_TILT": {
+      "bleu_4": 21.2,
+      "wer": 0.29,
+      "drop_bleu": -2.4
+    },
+    "SIGNING_SPEED_WARP": {
+      "bleu_4": 19.9,
+      "wer": 0.33,
+      "drop_bleu": -3.7
+    },
+    "COMPRESSION_NOISE": {
+      "bleu_4": 22.5,
+      "wer": 0.26,
+      "drop_bleu": -1.1
+    }
+  },
+  "methodology_note": "Synthetic corruptions are explicitly reported separately from natural cross-dataset domain shifts."
+}

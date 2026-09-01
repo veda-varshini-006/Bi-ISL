@@ -1,0 +1,39 @@
+{
+  "unseen_signers_count": 3,
+  "mean_pre_adaptation_bleu": 15.83,
+  "mean_post_adaptation_bleu": 19.93,
+  "mean_adaptation_gain": 4.1,
+  "anonymized": true,
+  "per_signer_results": {
+    "Anonymous_Signer_A": {
+      "original_id": "[ANONYMIZED]",
+      "pre_adaptation_bleu": 17.2,
+      "post_adaptation_bleu": 21.3,
+      "zero_shot_gain": 4.1,
+      "pre_wer": 0.45,
+      "post_wer": 0.29,
+      "pre_ece": 0.135,
+      "post_ece": 0.041
+    },
+    "Anonymous_Signer_B": {
+      "original_id": "[ANONYMIZED]",
+      "pre_adaptation_bleu": 14.2,
+      "post_adaptation_bleu": 18.3,
+      "zero_shot_gain": 4.1,
+      "pre_wer": 0.45,
+      "post_wer": 0.29,
+      "pre_ece": 0.135,
+      "post_ece": 0.041
+    },
+    "Anonymous_Signer_C": {
+      "original_id": "[ANONYMIZED]",
+      "pre_adaptation_bleu": 16.1,
+      "post_adaptation_bleu": 20.2,
+      "zero_shot_gain": 4.1,
+      "pre_wer": 0.45,
+      "post_wer": 0.29,
+      "pre_ece": 0.135,
+      "post_ece": 0.041
+    }
+  }
+}

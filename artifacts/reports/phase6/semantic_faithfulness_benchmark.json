@@ -1,0 +1,21 @@
+{
+  "evaluation_title": "Semantic Faithfulness Evaluation Report (Prompt 57)",
+  "n_samples": 1,
+  "metrics": {
+    "bleu_4": 23.6,
+    "chrf": 54.2,
+    "semantic_slot_f1": 1.0,
+    "semantic_slot_precision": 1.0,
+    "semantic_slot_recall": 1.0
+  },
+  "per_slot_category_f1": {
+    "intent": 1.0,
+    "entity": 1.0,
+    "location": 1.0,
+    "symptom_object": 1.0,
+    "direction": 1.0,
+    "time": 1.0,
+    "negation": 1.0,
+    "question_type": 1.0
+  }
+}
