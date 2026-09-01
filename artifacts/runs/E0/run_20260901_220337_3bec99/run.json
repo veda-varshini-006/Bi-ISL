@@ -1,0 +1,135 @@
+{
+  "run_id": "run_20260901_220337_3bec99",
+  "experiment_id": "E0",
+  "timestamp": "2026-09-01T16:33:37.169059+00:00",
+  "status": "completed",
+  "git": {
+    "commit_sha": "722dfeccbb7bcad8668fcae26d86462379c4b53b",
+    "branch": "main",
+    "is_dirty": true
+  },
+  "configuration": {
+    "dataset": {
+      "dataset_name": "ISLTranslate",
+      "data_dir": "./data",
+      "split_manifest_path": "./data/splits/isltranslate_splits.json",
+      "num_classes": 263,
+      "max_frames": 300,
+      "target_vocab_size": 10000
+    },
+    "preprocessing": {
+      "fps": 30.0,
+      "img_size": 224,
+      "norm_mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "norm_std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "landmark_types": [
+        "pose",
+        "hands",
+        "face"
+      ],
+      "apply_augmentation": true
+    },
+    "visualencoder": {
+      "backbone_type": "i3d_landmark_hybrid",
+      "hidden_dim": 512,
+      "in_channels": 3,
+      "num_layers": 6,
+      "dropout": 0.1
+    },
+    "decoder": {
+      "decoder_type": "transformer",
+      "d_model": 512,
+      "num_heads": 8,
+      "num_layers": 6,
+      "vocab_size": 10000,
+      "max_seq_len": 256
+    },
+    "context": {
+      "enable_context": true,
+      "sbds_dim": 256,
+      "max_history_turns": 5,
+      "reliability_threshold": 0.5,
+      "context_gate_type": "evidence_gated"
+    },
+    "ugsa": {
+      "enable_ugsa": true,
+      "uncertainty_threshold": 0.3,
+      "max_update_steps": 10,
+      "learning_rate": 0.0001,
+      "protected_rollback_drop_tolerance": 0.02
+    },
+    "training": {
+      "seed": 42,
+      "batch_size": 32,
+      "epochs": 50,
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "optimizer": "adamw",
+      "scheduler": "cosine",
+      "clip_grad": 1.0
+    },
+    "evaluation": {
+      "primary_metrics": [
+        "bleu4",
+        "chrf",
+        "bertscore"
+      ],
+      "secondary_metrics": [
+        "ger",
+        "rouge_l",
+        "fps"
+      ],
+      "compute_usr": true,
+      "evaluate_context_attack": true
+    },
+    "mobile": {
+      "quantization_format": "int8",
+      "target_device": "android",
+      "max_p95_latency_ms": 200.0,
+      "max_ram_mb": 500.0,
+      "export_onnx": true
+    },
+    "avatar": {
+      "enable_avatar": true,
+      "rig_type": "humanoid_rig",
+      "fps": 60.0,
+      "non_manual_markers_enabled": true,
+      "blendshape_count": 52
+    },
+    "experiment": {
+      "exp_id": "E1",
+      "title": "Baseline SLT Reproduction",
+      "output_dir": "./artifacts/e1_baseline",
+      "save_checkpoints": true,
+      "seed": 42
+    }
+  },
+  "dataset_version": "1.0",
+  "split_hashes": {},
+  "seed": 42,
+  "hardware": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",
+    "python_version": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+    "cuda_available": false,
+    "device_count": 0,
+    "device_names": []
+  },
+  "training_curves": {},
+  "evaluation_results": {
+    "total_samples": 4,
+    "total_violations": 0,
+    "critical_violations": 0
+  },
+  "checkpoint_paths": [],
+  "elapsed_time_seconds": 0.287,
+  "errors_and_warnings": []
+}

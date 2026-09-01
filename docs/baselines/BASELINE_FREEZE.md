@@ -6,7 +6,7 @@
 ## Frozen Specifications (`BASELINE_V1`)
 
 - **Git Tag:** `BASELINE_V1`
-- **Commit Hash:** `cfb2504c54c90ed0d3f557281f4832f24de1ca03`
+- **Commit Hash:** `dccdd942f37b7da3fe4a458dc56b0cb9b9a6ce09`
 - **Selected Model:** `MultimodalBaseline (RGB + Hands + Pose + Face)`
 - **Validation BLEU-4:** **40.0 ± 0.0** (Evaluated over seeds `[42, 123, 456]` using validation data only)
 
@@ -19,7 +19,7 @@
 | **Tokenizer** | `src/text/tokenizer.py` | `v1.0.0_word_level` |
 | **Evaluation Suite** | `src/evaluation/e1_evaluator.py` | E1 Multi-Metric |
 | **Model Checkpoint** | `artifacts/checkpoints/baseline_v1/best_checkpoint.pt` | Saved State Dict |
-| **Commit Hash** | `cfb2504c54c90ed0d3f557281f4832f24de1ca03` | Git HEAD SHA |
+| **Commit Hash** | `dccdd942f37b7da3fe4a458dc56b0cb9b9a6ce09` | Git HEAD SHA |
 
 ## Multi-Seed Validation Results
 

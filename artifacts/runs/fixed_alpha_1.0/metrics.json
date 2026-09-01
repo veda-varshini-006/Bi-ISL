@@ -1,0 +1,16 @@
+{
+  "evaluation_scope": "E1_Comprehensive",
+  "semantic_metric_version": "v1.0.0_levenshtein_slot",
+  "bleu_1": 95.0,
+  "bleu_2": 86.67,
+  "bleu_3": 80.0,
+  "bleu_4": 40.0,
+  "chrf_plus_plus": 97.33,
+  "mean_semantic_score_v1": 92.0,
+  "mean_wer": 5.0,
+  "length_statistics": {
+    "mean_prediction_length": 3.6,
+    "mean_reference_length": 3.6,
+    "length_ratio": 1.0
+  }
+}

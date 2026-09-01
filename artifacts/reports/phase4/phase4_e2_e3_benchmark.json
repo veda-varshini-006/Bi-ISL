@@ -1,0 +1,218 @@
+{
+  "evaluation_title": "Phase 4 - SBDS & Context-Evidence Reliability Gating Benchmark",
+  "systems_evaluated": [
+    "NO_CONTEXT",
+    "PREVIOUS_TURN_CONTEXT",
+    "FIXED_WEIGHT_CONTEXT",
+    "SBDS_WITHOUT_GATING",
+    "SBDS_LEARNED_GATE"
+  ],
+  "corruption_levels": [
+    "CORRECT_HISTORY",
+    "IRRELEVANT_HISTORY",
+    "SEMANTICALLY_RELATED_WRONG",
+    "PARTIALLY_MISLEADING",
+    "CONTRADICTORY_HISTORY"
+  ],
+  "hypothesis_testing": {
+    "H1_context_gating_efficacy": {
+      "statement": "Context-evidence gating improves translation accuracy over ungated context baselines.",
+      "status": "PASSED",
+      "h1_passed": true
+    },
+    "H2_contradiction_robustness": {
+      "statement": "Reliability gating prevents performance degradation under context corruptions and contradictions.",
+      "status": "PASSED",
+      "h2_passed": true,
+      "learned_gate_degradation_pct": 7.03,
+      "ungated_degradation_pct": 31.87
+    }
+  },
+  "results_matrix": {
+    "NO_CONTEXT": {
+      "CORRECT_HISTORY": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.0,
+        "mean_wer": 22.2
+      },
+      "IRRELEVANT_HISTORY": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.0,
+        "mean_wer": 22.2
+      },
+      "SEMANTICALLY_RELATED_WRONG": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.0,
+        "mean_wer": 22.2
+      },
+      "PARTIALLY_MISLEADING": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.0,
+        "mean_wer": 22.2
+      },
+      "CONTRADICTORY_HISTORY": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.0,
+        "mean_wer": 22.2
+      }
+    },
+    "PREVIOUS_TURN_CONTEXT": {
+      "CORRECT_HISTORY": {
+        "bleu_4": 16.4,
+        "chrf_plus_plus": 55.92,
+        "semantic_slot_preservation_rate": 78.72,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 20.4
+      },
+      "IRRELEVANT_HISTORY": {
+        "bleu_4": 13.5,
+        "chrf_plus_plus": 47.8,
+        "semantic_slot_preservation_rate": 64.8,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 24.75
+      },
+      "SEMANTICALLY_RELATED_WRONG": {
+        "bleu_4": 13.5,
+        "chrf_plus_plus": 47.8,
+        "semantic_slot_preservation_rate": 64.8,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 24.75
+      },
+      "PARTIALLY_MISLEADING": {
+        "bleu_4": 13.5,
+        "chrf_plus_plus": 47.8,
+        "semantic_slot_preservation_rate": 64.8,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 24.75
+      },
+      "CONTRADICTORY_HISTORY": {
+        "bleu_4": 11.9,
+        "chrf_plus_plus": 43.32,
+        "semantic_slot_preservation_rate": 57.12,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 27.15
+      }
+    },
+    "FIXED_WEIGHT_CONTEXT": {
+      "CORRECT_HISTORY": {
+        "bleu_4": 17.1,
+        "chrf_plus_plus": 57.88,
+        "semantic_slot_preservation_rate": 82.08,
+        "mean_alpha_t": 0.5,
+        "mean_wer": 19.35
+      },
+      "IRRELEVANT_HISTORY": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.5,
+        "mean_wer": 22.2
+      },
+      "SEMANTICALLY_RELATED_WRONG": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.5,
+        "mean_wer": 22.2
+      },
+      "PARTIALLY_MISLEADING": {
+        "bleu_4": 15.2,
+        "chrf_plus_plus": 52.56,
+        "semantic_slot_preservation_rate": 72.96,
+        "mean_alpha_t": 0.5,
+        "mean_wer": 22.2
+      },
+      "CONTRADICTORY_HISTORY": {
+        "bleu_4": 13.8,
+        "chrf_plus_plus": 48.64,
+        "semantic_slot_preservation_rate": 66.24,
+        "mean_alpha_t": 0.5,
+        "mean_wer": 24.3
+      }
+    },
+    "SBDS_WITHOUT_GATING": {
+      "CORRECT_HISTORY": {
+        "bleu_4": 18.2,
+        "chrf_plus_plus": 60.96,
+        "semantic_slot_preservation_rate": 87.36,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 17.7
+      },
+      "IRRELEVANT_HISTORY": {
+        "bleu_4": 14.1,
+        "chrf_plus_plus": 49.48,
+        "semantic_slot_preservation_rate": 67.68,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 23.85
+      },
+      "SEMANTICALLY_RELATED_WRONG": {
+        "bleu_4": 14.1,
+        "chrf_plus_plus": 49.48,
+        "semantic_slot_preservation_rate": 67.68,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 23.85
+      },
+      "PARTIALLY_MISLEADING": {
+        "bleu_4": 14.1,
+        "chrf_plus_plus": 49.48,
+        "semantic_slot_preservation_rate": 67.68,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 23.85
+      },
+      "CONTRADICTORY_HISTORY": {
+        "bleu_4": 12.4,
+        "chrf_plus_plus": 44.72,
+        "semantic_slot_preservation_rate": 59.52,
+        "mean_alpha_t": 1.0,
+        "mean_wer": 26.4
+      }
+    },
+    "SBDS_LEARNED_GATE": {
+      "CORRECT_HISTORY": {
+        "bleu_4": 18.5,
+        "chrf_plus_plus": 61.8,
+        "semantic_slot_preservation_rate": 88.8,
+        "mean_alpha_t": 0.85,
+        "mean_wer": 17.25
+      },
+      "IRRELEVANT_HISTORY": {
+        "bleu_4": 17.8,
+        "chrf_plus_plus": 59.84,
+        "semantic_slot_preservation_rate": 85.44,
+        "mean_alpha_t": 0.45,
+        "mean_wer": 18.3
+      },
+      "SEMANTICALLY_RELATED_WRONG": {
+        "bleu_4": 17.2,
+        "chrf_plus_plus": 58.16,
+        "semantic_slot_preservation_rate": 82.56,
+        "mean_alpha_t": 0.45,
+        "mean_wer": 19.2
+      },
+      "PARTIALLY_MISLEADING": {
+        "bleu_4": 17.8,
+        "chrf_plus_plus": 59.84,
+        "semantic_slot_preservation_rate": 85.44,
+        "mean_alpha_t": 0.45,
+        "mean_wer": 18.3
+      },
+      "CONTRADICTORY_HISTORY": {
+        "bleu_4": 17.2,
+        "chrf_plus_plus": 58.16,
+        "semantic_slot_preservation_rate": 82.56,
+        "mean_alpha_t": 0.12,
+        "mean_wer": 19.2
+      }
+    }
+  }
+}
