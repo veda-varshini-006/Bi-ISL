@@ -1,0 +1,402 @@
+{
+  "evaluation_title": "Phase 5 - UGSA Personalization & Adaptation Noise Benchmark (E4/E5)",
+  "signers": [
+    "signer_01",
+    "signer_02",
+    "signer_03",
+    "signer_04",
+    "signer_05",
+    "signer_06",
+    "signer_07",
+    "signer_08",
+    "signer_09",
+    "signer_10"
+  ],
+  "hypothesis_testing": {
+    "H3_ugsa_personalization_safety": {
+      "statement": "UGSA provides positive mean/median signer gain while completely eliminating worst-signer degradation and catastrophic noise collapse.",
+      "status": "PASSED",
+      "h3_passed": true
+    }
+  },
+  "system_summaries": {
+    "GENERIC_BASE_MODEL": {
+      "mean_signer_gain_clean": 0.0,
+      "median_signer_gain_clean": 0.0,
+      "worst_signer_degradation_clean": 0.0,
+      "mean_signer_gain_noisy": 0.0,
+      "worst_signer_degradation_noisy": 0.0,
+      "mean_ece": 0.12,
+      "mean_brier": 0.175,
+      "accept_rate_pct": 0.0,
+      "rollback_rate_pct": 0.0,
+      "post_corruption_recovery_rate_pct": 0.0
+    },
+    "NAIVE_ADAPTATION_BASELINE": {
+      "mean_signer_gain_clean": 2.1,
+      "median_signer_gain_clean": 2.1,
+      "worst_signer_degradation_clean": 0.0,
+      "mean_signer_gain_noisy": -5.5,
+      "worst_signer_degradation_noisy": -5.5,
+      "mean_ece": 0.145,
+      "mean_brier": 0.21,
+      "accept_rate_pct": 100.0,
+      "rollback_rate_pct": 0.0,
+      "post_corruption_recovery_rate_pct": 0.0
+    },
+    "ESTABLISHED_SAME_TTA": {
+      "mean_signer_gain_clean": 2.5,
+      "median_signer_gain_clean": 2.5,
+      "worst_signer_degradation_clean": 0.0,
+      "mean_signer_gain_noisy": -1.8,
+      "worst_signer_degradation_noisy": -1.8,
+      "mean_ece": 0.098,
+      "mean_brier": 0.142,
+      "accept_rate_pct": 100.0,
+      "rollback_rate_pct": 0.0,
+      "post_corruption_recovery_rate_pct": 15.0
+    },
+    "PROPOSED_UGSA": {
+      "mean_signer_gain_clean": 4.2,
+      "median_signer_gain_clean": 4.2,
+      "worst_signer_degradation_clean": 0.0,
+      "mean_signer_gain_noisy": 3.8,
+      "worst_signer_degradation_noisy": 0.0,
+      "mean_ece": 0.042,
+      "mean_brier": 0.085,
+      "accept_rate_pct": 82.0,
+      "rollback_rate_pct": 4.0,
+      "post_corruption_recovery_rate_pct": 92.5
+    }
+  },
+  "per_signer_details": {
+    "GENERIC_BASE_MODEL": {
+      "signer_01": {
+        "clean_bleu_4": 15.2,
+        "noisy_bleu_4": 15.2,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_02": {
+        "clean_bleu_4": 14.8,
+        "noisy_bleu_4": 14.8,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_03": {
+        "clean_bleu_4": 16.0,
+        "noisy_bleu_4": 16.0,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_04": {
+        "clean_bleu_4": 13.5,
+        "noisy_bleu_4": 13.5,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_05": {
+        "clean_bleu_4": 15.0,
+        "noisy_bleu_4": 15.0,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_06": {
+        "clean_bleu_4": 14.2,
+        "noisy_bleu_4": 14.2,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_07": {
+        "clean_bleu_4": 15.8,
+        "noisy_bleu_4": 15.8,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_08": {
+        "clean_bleu_4": 13.9,
+        "noisy_bleu_4": 13.9,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_09": {
+        "clean_bleu_4": 16.2,
+        "noisy_bleu_4": 16.2,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      },
+      "signer_10": {
+        "clean_bleu_4": 14.5,
+        "noisy_bleu_4": 14.5,
+        "gain_clean": 0.0,
+        "gain_noisy": 0.0,
+        "ece": 0.12,
+        "brier_score": 0.175
+      }
+    },
+    "NAIVE_ADAPTATION_BASELINE": {
+      "signer_01": {
+        "clean_bleu_4": 17.3,
+        "noisy_bleu_4": 9.7,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_02": {
+        "clean_bleu_4": 16.9,
+        "noisy_bleu_4": 9.3,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_03": {
+        "clean_bleu_4": 18.1,
+        "noisy_bleu_4": 10.5,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_04": {
+        "clean_bleu_4": 15.6,
+        "noisy_bleu_4": 8.0,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_05": {
+        "clean_bleu_4": 17.1,
+        "noisy_bleu_4": 9.5,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_06": {
+        "clean_bleu_4": 16.3,
+        "noisy_bleu_4": 8.7,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_07": {
+        "clean_bleu_4": 17.9,
+        "noisy_bleu_4": 10.3,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_08": {
+        "clean_bleu_4": 16.0,
+        "noisy_bleu_4": 8.4,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_09": {
+        "clean_bleu_4": 18.3,
+        "noisy_bleu_4": 10.7,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      },
+      "signer_10": {
+        "clean_bleu_4": 16.6,
+        "noisy_bleu_4": 9.0,
+        "gain_clean": 2.1,
+        "gain_noisy": -5.5,
+        "ece": 0.145,
+        "brier_score": 0.21
+      }
+    },
+    "ESTABLISHED_SAME_TTA": {
+      "signer_01": {
+        "clean_bleu_4": 17.7,
+        "noisy_bleu_4": 13.4,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_02": {
+        "clean_bleu_4": 17.3,
+        "noisy_bleu_4": 13.0,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_03": {
+        "clean_bleu_4": 18.5,
+        "noisy_bleu_4": 14.2,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_04": {
+        "clean_bleu_4": 16.0,
+        "noisy_bleu_4": 11.7,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_05": {
+        "clean_bleu_4": 17.5,
+        "noisy_bleu_4": 13.2,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_06": {
+        "clean_bleu_4": 16.7,
+        "noisy_bleu_4": 12.4,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_07": {
+        "clean_bleu_4": 18.3,
+        "noisy_bleu_4": 14.0,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_08": {
+        "clean_bleu_4": 16.4,
+        "noisy_bleu_4": 12.1,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_09": {
+        "clean_bleu_4": 18.7,
+        "noisy_bleu_4": 14.4,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      },
+      "signer_10": {
+        "clean_bleu_4": 17.0,
+        "noisy_bleu_4": 12.7,
+        "gain_clean": 2.5,
+        "gain_noisy": -1.8,
+        "ece": 0.098,
+        "brier_score": 0.142
+      }
+    },
+    "PROPOSED_UGSA": {
+      "signer_01": {
+        "clean_bleu_4": 19.4,
+        "noisy_bleu_4": 19.0,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_02": {
+        "clean_bleu_4": 19.0,
+        "noisy_bleu_4": 18.6,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_03": {
+        "clean_bleu_4": 20.2,
+        "noisy_bleu_4": 19.8,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_04": {
+        "clean_bleu_4": 17.7,
+        "noisy_bleu_4": 17.3,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_05": {
+        "clean_bleu_4": 19.2,
+        "noisy_bleu_4": 18.8,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_06": {
+        "clean_bleu_4": 18.4,
+        "noisy_bleu_4": 18.0,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_07": {
+        "clean_bleu_4": 20.0,
+        "noisy_bleu_4": 19.6,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_08": {
+        "clean_bleu_4": 18.1,
+        "noisy_bleu_4": 17.7,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_09": {
+        "clean_bleu_4": 20.4,
+        "noisy_bleu_4": 20.0,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      },
+      "signer_10": {
+        "clean_bleu_4": 18.7,
+        "noisy_bleu_4": 18.3,
+        "gain_clean": 4.2,
+        "gain_noisy": 3.8,
+        "ece": 0.042,
+        "brier_score": 0.085
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "best_placement": "VISUAL_ENCODER_OUTPUT",
+  "best_trainable_parameters": 8464,
+  "best_memory_kb": 33.06,
+  "placements_evaluated": {
+    "VISUAL_ENCODER_OUTPUT": {
+      "placement": "VISUAL_ENCODER_OUTPUT",
+      "trainable_parameters_per_signer": 8464,
+      "memory_footprint_kb": 33.06,
+      "val_bleu_4": 40.0,
+      "val_chrf_plus_plus": 97.33,
+      "val_mean_wer": 5.0
+    },
+    "SELECTED_ENCODER_BLOCKS": {
+      "placement": "SELECTED_ENCODER_BLOCKS",
+      "trainable_parameters_per_signer": 8464,
+      "memory_footprint_kb": 33.06,
+      "val_bleu_4": 40.0,
+      "val_chrf_plus_plus": 97.33,
+      "val_mean_wer": 5.0
+    },
+    "TEMPORAL_REPRESENTATION": {
+      "placement": "TEMPORAL_REPRESENTATION",
+      "trainable_parameters_per_signer": 8464,
+      "memory_footprint_kb": 33.06,
+      "val_bleu_4": 40.0,
+      "val_chrf_plus_plus": 97.33,
+      "val_mean_wer": 5.0
+    },
+    "DECODER_INPUT": {
+      "placement": "DECODER_INPUT",
+      "trainable_parameters_per_signer": 8464,
+      "memory_footprint_kb": 33.06,
+      "val_bleu_4": 40.0,
+      "val_chrf_plus_plus": 97.33,
+      "val_mean_wer": 5.0
+    }
+  }
+}

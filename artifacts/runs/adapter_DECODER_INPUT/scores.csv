@@ -1,0 +1,11 @@
+sample_id,bleu_1,bleu_4,chrf_score,semantic_score_v1,wer,pred_length,ref_length,length_ratio
+val_adapter_DECODER_INPUT_0,100.0,0.0,100.0,100.0,0.0,3,3,1.0
+val_adapter_DECODER_INPUT_1,75.0,0.0,86.67,60.0,25.0,4,4,1.0
+val_adapter_DECODER_INPUT_2,100.0,0.0,100.0,100.0,0.0,3,3,1.0
+val_adapter_DECODER_INPUT_3,100.0,100.0,100.0,100.0,0.0,4,4,1.0
+val_adapter_DECODER_INPUT_4,100.0,100.0,100.0,100.0,0.0,4,4,1.0
+val_adapter_DECODER_INPUT_5,100.0,0.0,100.0,100.0,0.0,3,3,1.0
+val_adapter_DECODER_INPUT_6,75.0,0.0,86.67,60.0,25.0,4,4,1.0
+val_adapter_DECODER_INPUT_7,100.0,0.0,100.0,100.0,0.0,3,3,1.0
+val_adapter_DECODER_INPUT_8,100.0,100.0,100.0,100.0,0.0,4,4,1.0
+val_adapter_DECODER_INPUT_9,100.0,100.0,100.0,100.0,0.0,4,4,1.0
