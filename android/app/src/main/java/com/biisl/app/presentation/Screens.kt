@@ -46,16 +46,27 @@ fun CameraScreen(navController: NavController) {
         com.biisl.app.camera.CameraPipeline(context)
     }
 
+    val resultAggregator = androidx.compose.runtime.remember {
+        com.biisl.app.mediapipe.ResultAggregator { combinedResult ->
+            // Pass the combined result to InferenceEngine
+            android.util.Log.d("CameraScreen", "Got combined landmarks, latency: ${combinedResult.preprocessingLatencyMs}ms")
+        }
+    }
+
+    val mediaPipeHelper = androidx.compose.runtime.remember {
+        com.biisl.app.mediapipe.MediaPipeHelper(context, resultAggregator)
+    }
+
     val frameAnalyzer = androidx.compose.runtime.remember {
         com.biisl.app.camera.FrameAnalyzer(frameSamplingRateMs = 100L) { image, rotation, ts ->
-            // In a real implementation, this feeds to InferenceEngine
-            // Log.d("CameraScreen", "Frame processed: $ts")
+            mediaPipeHelper.detectLiveStream(image, isFrontCamera = false)
         }
     }
 
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
             cameraPipeline.shutdown()
+            mediaPipeHelper.shutdown()
         }
     }
 

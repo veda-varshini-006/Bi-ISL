@@ -23,13 +23,14 @@ class FrameAnalyzer(
             // Log details for research diagnostics
             Log.d("FrameAnalyzer", "Processing frame: rotation=$rotationDegrees, ts=$timestamp")
 
-            // Pass to the callback (which might route to InferenceEngine)
+            // Pass to the callback (which might route to InferenceEngine or MediaPipeHelper)
+            // The callback is responsible for closing the image if it processes it asynchronously.
             onFrameProcessed(image, rotationDegrees, timestamp)
             
             lastAnalyzedTimestamp = currentTimestamp
+        } else {
+            // Close immediately if skipped
+            image.close()
         }
-        
-        // ALWAYS close the imageProxy to prevent stalling the CameraX pipeline
-        image.close()
     }
 }
