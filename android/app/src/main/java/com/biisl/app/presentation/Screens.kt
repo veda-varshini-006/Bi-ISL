@@ -39,9 +39,43 @@ fun ConversationScreen(navController: NavController) {
 
 @Composable
 fun CameraScreen(navController: NavController) {
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text("Camera Viewfinder Placeholder")
-        Button(onClick = { navController.navigate("translation") }) { Text("Simulate Translation") }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    val cameraPipeline = androidx.compose.runtime.remember {
+        com.biisl.app.camera.CameraPipeline(context)
+    }
+
+    val frameAnalyzer = androidx.compose.runtime.remember {
+        com.biisl.app.camera.FrameAnalyzer(frameSamplingRateMs = 100L) { image, rotation, ts ->
+            // In a real implementation, this feeds to InferenceEngine
+            // Log.d("CameraScreen", "Frame processed: $ts")
+        }
+    }
+
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            cameraPipeline.shutdown()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        androidx.compose.ui.viewinterop.AndroidView(
+            factory = { ctx ->
+                androidx.camera.view.PreviewView(ctx).apply {
+                    this.scaleType = androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
+                    cameraPipeline.bindToLifecycle(lifecycleOwner, this, frameAnalyzer)
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Button(
+            onClick = { navController.navigate("translation") },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(32.dp)
+        ) {
+            Text("Simulate Translation")
+        }
     }
 }
 
