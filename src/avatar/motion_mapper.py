@@ -1,7 +1,8 @@
-"""Motion Sequence Mapper Subsystem (Prompt 74 & Prompt 75).
+"""Motion Sequence Mapper Subsystem (Prompt 74, Prompt 75 & Prompt 76).
 
 Maps ISL IR tokens into retargeted skeletal motion keyframes onto Unity Humanoid Rigs,
-and synthesizes controlled transitions between consecutive sign clips.
+synthesizes controlled transitions between consecutive sign clips, and applies
+facial/head/body non-manual markers.
 """
 
 from abc import ABC, abstractmethod
@@ -9,6 +10,7 @@ from typing import Dict, Any, List, Optional
 from src.avatar.animation_clip_library import AnimationClip, AnimationClipKeyframe, AnimationClipLibrary
 from src.avatar.motion_retargeter import MotionRetargeter, HumanoidRigConfig
 from src.avatar.transition_engine import TransitionEngine, CoarticulationMetadata
+from src.avatar.nmm_controller import NMMController, NonManualTagSpec
 
 
 class BaseMotionMapper(ABC):
@@ -30,6 +32,7 @@ class RetargetingMotionMapper(BaseMotionMapper):
         self.clip_library = clip_library or AnimationClipLibrary.create_seeded_library()
         self.retargeter = MotionRetargeter(target_config or HumanoidRigConfig())
         self.transition_engine = TransitionEngine()
+        self.nmm_controller = NMMController()
 
     def map_to_motion_keyframes(self, isl_ir: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Map single ISL IR representation to retargeted motion keyframe dictionaries."""
@@ -48,7 +51,27 @@ class RetargetingMotionMapper(BaseMotionMapper):
             clip, scale_factor=scale, target_handedness=target_handedness
         )
 
-        return [kf.to_dict() for kf in retargeted_clip.keyframes]
+        keyframes = retargeted_clip.keyframes
+
+        # Apply Non-Manual Markers if present in isl_ir
+        if "non_manual_markers" in isl_ir:
+            nmm_list = isl_ir["non_manual_markers"]
+            tag_specs = []
+            max_ts = keyframes[-1].timestamp_ms if keyframes else 1000.0
+            for item in nmm_list:
+                tag = item.get("tag") or item.get("marker_type") or item.get("type") or "neutral_facial"
+                specs = NonManualTagSpec(
+                    tag=tag,
+                    category=item.get("category", "general"),
+                    start_ms=float(item.get("start_ms", 0.0)),
+                    end_ms=float(item.get("end_ms", max_ts)),
+                    intensity=float(item.get("intensity", 1.0))
+                )
+                tag_specs.append(specs)
+
+            keyframes = self.nmm_controller.synchronize_nmm_to_keyframes(keyframes, tag_specs)
+
+        return [kf.to_dict() for kf in keyframes]
 
     def map_sequence_with_transitions(
         self,
@@ -57,7 +80,7 @@ class RetargetingMotionMapper(BaseMotionMapper):
         hold_duration_ms: float = 0.0,
         hold_handshape: bool = True
     ) -> List[Dict[str, Any]]:
-        """Map sequence of ISL IR tokens into a stitched retargeted clip with controlled transitions."""
+        """Map sequence of ISL IR tokens into a stitched retargeted clip with controlled transitions and NMMs."""
         if not isl_ir_sequence:
             return []
 
@@ -98,4 +121,26 @@ class RetargetingMotionMapper(BaseMotionMapper):
             hold_handshape=hold_handshape
         )
 
-        return [kf.to_dict() for kf in stitched_clip.keyframes]
+        keyframes = stitched_clip.keyframes
+
+        # Aggregate sequence-level NMM tags if provided
+        tag_specs = []
+        max_ts = keyframes[-1].timestamp_ms if keyframes else 1000.0
+        for item in isl_ir_sequence:
+            if "non_manual_markers" in item:
+                for nm_item in item["non_manual_markers"]:
+                    tag = nm_item.get("tag") or nm_item.get("marker_type") or nm_item.get("type") or "neutral_facial"
+                    tag_specs.append(
+                        NonManualTagSpec(
+                            tag=tag,
+                            category=nm_item.get("category", "general"),
+                            start_ms=float(nm_item.get("start_ms", 0.0)),
+                            end_ms=float(nm_item.get("end_ms", max_ts)),
+                            intensity=float(nm_item.get("intensity", 1.0))
+                        )
+                    )
+
+        if tag_specs:
+            keyframes = self.nmm_controller.synchronize_nmm_to_keyframes(keyframes, tag_specs)
+
+        return [kf.to_dict() for kf in keyframes]
