@@ -1,0 +1,22 @@
+{
+  "scene_id": "SCENE_FINGER_ALIGNMENT_01",
+  "name": "Scene_FingerAlignmentTest",
+  "target_criterion": "FINGER_ALIGNMENT",
+  "target_gloss": "DOCTOR",
+  "camera": {
+    "position": [
+      0.0,
+      1.25,
+      0.75
+    ],
+    "rotation_euler": [
+      5.0,
+      180.0,
+      0.0
+    ],
+    "fov": 35.0
+  },
+  "scale_factor": 1.0,
+  "handedness_override": null,
+  "tolerance_threshold": 0.002
+}

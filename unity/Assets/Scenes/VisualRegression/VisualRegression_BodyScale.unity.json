@@ -1,0 +1,22 @@
+{
+  "scene_id": "SCENE_BODY_SCALE_01",
+  "name": "Scene_BodyScaleTest",
+  "target_criterion": "BODY_SCALE",
+  "target_gloss": "DOCTOR",
+  "camera": {
+    "position": [
+      0.0,
+      1.1,
+      2.2
+    ],
+    "rotation_euler": [
+      0.0,
+      180.0,
+      0.0
+    ],
+    "fov": 55.0
+  },
+  "scale_factor": 1.25,
+  "handedness_override": null,
+  "tolerance_threshold": 0.005
+}

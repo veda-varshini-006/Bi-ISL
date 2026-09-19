@@ -1,0 +1,22 @@
+{
+  "scene_id": "SCENE_WRIST_ORIENTATION_01",
+  "name": "Scene_WristOrientationTest",
+  "target_criterion": "WRIST_ORIENTATION",
+  "target_gloss": "HELP",
+  "camera": {
+    "position": [
+      0.2,
+      1.2,
+      0.9
+    ],
+    "rotation_euler": [
+      0.0,
+      175.0,
+      0.0
+    ],
+    "fov": 40.0
+  },
+  "scale_factor": 1.0,
+  "handedness_override": null,
+  "tolerance_threshold": 0.003
+}

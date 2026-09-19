@@ -1,0 +1,22 @@
+{
+  "scene_id": "SCENE_JOINT_CONSTRAINTS_01",
+  "name": "Scene_JointConstraintsTest",
+  "target_criterion": "JOINT_CONSTRAINTS",
+  "target_gloss": "FEVER",
+  "camera": {
+    "position": [
+      0.0,
+      1.1,
+      1.8
+    ],
+    "rotation_euler": [
+      0.0,
+      180.0,
+      0.0
+    ],
+    "fov": 50.0
+  },
+  "scale_factor": 1.0,
+  "handedness_override": null,
+  "tolerance_threshold": 0.002
+}

@@ -1,0 +1,22 @@
+{
+  "scene_id": "SCENE_HANDEDNESS_01",
+  "name": "Scene_HandednessTest",
+  "target_criterion": "HANDEDNESS",
+  "target_gloss": "DOCTOR",
+  "camera": {
+    "position": [
+      0.0,
+      1.2,
+      1.6
+    ],
+    "rotation_euler": [
+      0.0,
+      180.0,
+      0.0
+    ],
+    "fov": 45.0
+  },
+  "scale_factor": 1.0,
+  "handedness_override": "LEFT",
+  "tolerance_threshold": 0.003
+}
