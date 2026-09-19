@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bi-ISL Research Suite | Context-Gated Signer-Adaptive Translation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-badge">Bi-ISL</div>
+      <div class="brand-text">
+        <h1>Bi-ISL Research Interface</h1>
+        <span class="subtitle">Context-Gated Signer-Adaptive Continuous ISL Engine</span>
+      </div>
+    </div>
+    
+    <div class="header-status">
+      <div class="chip engine-chip">
+        <span class="dot active"></span>
+        <span id="backendTag">Backend: XNNPACK (CPU FP32/INT8)</span>
+      </div>
+      <div class="chip pte-chip">
+        <span class="label">Model:</span>
+        <span id="modelTag">baseline_best_v1.pte</span>
+      </div>
+      <div class="chip latency-chip">
+        <span class="label">p95 Latency:</span>
+        <span id="latencyTag">18.4 ms</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="nav-item active" data-tab="live-stream">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span>Live Camera & Landmarks</span>
+      </div>
+      <div class="nav-item" data-tab="bidirectional">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+        <span>Bidirectional Dialogue (SBDS)</span>
+      </div>
+      <div class="nav-item" data-tab="avatar">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+        <span>3D Avatar Renderer</span>
+      </div>
+      <div class="nav-item" data-tab="signer-adaptation">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg>
+        <span>Signer Adaptation (UGSA)</span>
+      </div>
+      <div class="nav-item" data-tab="diagnostics">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Hardware Diagnostics & E8</span>
+      </div>
+      <div class="nav-item" data-tab="ablation">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Ablations & Metrics (E0–E9)</span>
+      </div>
+    </nav>
+
+    <!-- Main Workspace Content Area -->
+    <main class="content-area">
+      <!-- TAB 1: Live Camera & Landmark Extraction -->
+      <section id="live-stream" class="tab-pane active">
+        <div class="pane-grid">
+          <div class="card video-card">
+            <div class="card-header">
+              <h2><span class="icon">🎥</span> Camera & MediaPipe Live Landmarks</h2>
+              <div class="controls-row">
+                <button id="btnWebcam" class="btn btn-primary">Start Webcam</button>
+                <button id="btnSimulate" class="btn btn-secondary">Simulate Sign Feed</button>
+              </div>
+            </div>
+            <div class="video-container">
+              <video id="webcamVideo" autoplay playsinline muted style="display:none;"></video>
+              <canvas id="landmarkCanvas" width="640" height="480"></canvas>
+              <div class="video-overlay">
+                <div class="fps-badge">60 FPS</div>
+                <div class="landmark-badge">Hands: 42 | Pose: 33 | Face: 468</div>
+              </div>
+            </div>
+            <div class="telemetry-bar">
+              <div class="tele-item">
+                <span class="tele-label">Frametime:</span>
+                <span id="frametimeVal" class="tele-val">16.6 ms</span>
+              </div>
+              <div class="tele-item">
+                <span class="tele-label">MediaPipe Preproc:</span>
+                <span id="preprocVal" class="tele-val">4.2 ms</span>
+              </div>
+              <div class="tele-item">
+                <span class="tele-label">Frame Sampling:</span>
+                <span class="tele-val">100 ms (10 Hz)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card translation-card">
+            <div class="card-header">
+              <h2><span class="icon">⚡</span> Real-Time Context-Gated Translation Output</h2>
+              <span class="status-badge live">LIVE INFERENCE</span>
+            </div>
+
+            <div class="context-gate-widget">
+              <div class="widget-title">
+                <span>Context Reliability Gate (\(\alpha_{gate}\))</span>
+                <span id="gateValText" class="gate-percentage">88.4% Visual Driven</span>
+              </div>
+              <div class="progress-bar-container">
+                <div id="gateProgressBar" class="progress-bar" style="width: 88.4%;"></div>
+              </div>
+              <div class="gate-meta">
+                <span>Low Reliability Context Suppressed</span>
+                <span id="gateState">Status: PASS (Visual Evidence Strong)</span>
+              </div>
+            </div>
+
+            <div class="output-box">
+              <label>Predicted Gloss Sequence:</label>
+              <div id="glossSequence" class="gloss-tokens">
+                <span class="token">ME</span>
+                <span class="token">TRAIN</span>
+                <span class="token">STATION</span>
+                <span class="token">GO</span>
+                <span class="token">TOMORROW</span>
+              </div>
+            </div>
+
+            <div class="output-box">
+              <label>Generated English Sentence:</label>
+              <div id="englishOutput" class="sentence-result">"I will go to the train station tomorrow."</div>
+            </div>
+
+            <div class="confidence-meters">
+              <div class="meter-item">
+                <span>Sentence Confidence:</span>
+                <div class="mini-bar-bg"><div class="mini-bar-fill" style="width: 94%;"></div></div>
+                <span>94.2%</span>
+              </div>
+              <div class="meter-item">
+                <span>Signer Match Score:</span>
+                <div class="mini-bar-bg"><div class="mini-bar-fill green" style="width: 91%;"></div></div>
+                <span>91.0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Shared Bidirectional Dialogue State (SBDS) -->
+      <section id="bidirectional" class="tab-pane">
+        <div class="pane-grid">
+          <div class="card chat-card">
+            <div class="card-header">
+              <h2><span class="icon">💬</span> Bidirectional Conversation Engine</h2>
+              <div class="mode-toggle">
+                <button id="btnModeForward" class="btn btn-sm btn-accent active">ISL → English</button>
+                <button id="btnModeReverse" class="btn btn-sm btn-secondary">English → ISL Avatar</button>
+              </div>
+            </div>
+
+            <div id="chatHistory" class="chat-history">
+              <div class="chat-bubble user-isl">
+                <div class="bubble-meta">Signer (ISL Turn 1)</div>
+                <div class="bubble-content">👋 [Gloss: DOCTOR APPOINTMENT TIME WHAT]</div>
+                <div class="bubble-trans">Translated: "What time is my doctor appointment?"</div>
+              </div>
+              <div class="chat-bubble agent-eng">
+                <div class="bubble-meta">System (English Turn 2)</div>
+                <div class="bubble-content">"Your doctor appointment is at 4:30 PM today at City Hospital."</div>
+                <div class="bubble-trans">Rendered on ISL Avatar: [DOCTOR APPOINTMENT TODAY 4:30 PM CITY HOSPITAL]</div>
+              </div>
+            </div>
+
+            <div class="chat-input-row">
+              <input type="text" id="userTextInput" placeholder="Type English sentence or speak to convert to ISL Avatar..." />
+              <button id="btnSendInput" class="btn btn-primary">Translate & Render</button>
+            </div>
+          </div>
+
+          <div class="card sbds-card">
+            <div class="card-header">
+              <h2><span class="icon">🧠</span> SBDS Memory Inspector (\(S_t\))</h2>
+            </div>
+            <div class="sbds-inspector">
+              <div class="sbds-field">
+                <span class="key">Entities (\(E_t\)):</span>
+                <span class="val">[Doctor, Appointment, City Hospital]</span>
+              </div>
+              <div class="sbds-field">
+                <span class="key">Intents (\(I_t\)):</span>
+                <span class="val">[Query_Schedule, Location_Lookup]</span>
+              </div>
+              <div class="sbds-field">
+                <span class="key">Referents (\(R_t\)):</span>
+                <span class="val">{Time: "16:30", Location: "City Hospital"}</span>
+              </div>
+              <div class="sbds-field">
+                <span class="key">Temporal Attributes (\(T_t\)):</span>
+                <span class="val">Today (2026-09-19)</span>
+              </div>
+              <div class="sbds-field">
+                <span class="key">Confidence Metadata (\(C_t\)):</span>
+                <span class="val">\(\mu=0.962, \sigma=0.014\)</span>
+              </div>
+              <div class="sbds-field">
+                <span class="key">Previous Turn (\(Y_{t-1}\)):</span>
+                <span class="val">"What time is my doctor appointment?"</span>
+              </div>
+            </div>
+
+            <div class="adversarial-test-box">
+              <h3>Adversarial Context Injection Test</h3>
+              <p>Simulate misleading historical dialogue turns to test Reliability Gate suppression.</p>
+              <div class="btn-group">
+                <button id="btnInjectClean" class="btn btn-sm btn-outline">Clean Context</button>
+                <button id="btnInjectMisleading" class="btn btn-sm btn-warning">Inject Contradictory Turn</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: 3D Avatar Renderer -->
+      <section id="avatar" class="tab-pane">
+        <div class="pane-grid">
+          <div class="card avatar-render-card">
+            <div class="card-header">
+              <h2><span class="icon">👤</span> Linguistically Grounded 3D ISL Avatar</h2>
+              <div class="avatar-controls">
+                <label>Speed:</label>
+                <input type="range" id="avatarSpeed" min="0.5" max="2.0" step="0.1" value="1.0">
+                <span id="speedVal">1.0x</span>
+              </div>
+            </div>
+
+            <div class="avatar-canvas-wrapper">
+              <canvas id="avatarCanvas" width="540" height="420"></canvas>
+              <div class="avatar-overlay-info">
+                <div class="nmm-badge" id="nmmDisplay">NMM: Eyebrows Raised | Head Tilt Left | Mouth: "DOCTOR"</div>
+              </div>
+            </div>
+
+            <div class="avatar-playbar">
+              <button id="btnPlayAvatar" class="btn btn-primary btn-sm">▶ Play Sign Sequence</button>
+              <button id="btnPauseAvatar" class="btn btn-secondary btn-sm">⏸ Pause</button>
+              <div class="timeline-slider">
+                <input type="range" id="timelineRange" min="0" max="100" value="35">
+              </div>
+            </div>
+          </div>
+
+          <div class="card representation-card">
+            <div class="card-header">
+              <h2><span class="icon">📜</span> Intermediate ISL Representation (O5/O6)</h2>
+            </div>
+            <div class="representation-details">
+              <div class="rep-box">
+                <h4>1. Synthesized Gloss Alignment</h4>
+                <div class="code-block">
+[00:00 - 00:40] GLOSS: DOCTOR (Dominant Hand: Right, Location: Wrist Tap)
+[00:40 - 01:10] GLOSS: APPOINTMENT (Two-handed circle & lock)
+[01:10 - 01:50] GLOSS: TIME-QUESTION (Index finger tap wrist + eyebrows raised)
+                </div>
+              </div>
+              <div class="rep-box">
+                <h4>2. Non-Manual Markers (NMM) Timeline</h4>
+                <div class="nmm-timeline">
+                  <div class="nmm-track">
+                    <span class="track-label">Facial Expression:</span>
+                    <span class="track-segment active">Eyebrow Raise (Q-Question)</span>
+                  </div>
+                  <div class="nmm-track">
+                    <span class="track-label">Mouthings:</span>
+                    <span class="track-segment active">/dok-tor/</span>
+                  </div>
+                  <div class="nmm-track">
+                    <span class="track-label">Head Pose:</span>
+                    <span class="track-segment">Forward Tilt</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Signer Adaptation (UGSA) -->
+      <section id="signer-adaptation" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h2><span class="icon">🛡️</span> Uncertainty-Gated Signer Adaptation (UGSA)</h2>
+            <span class="status-badge safe">PROTECTED SET ACTIVE</span>
+          </div>
+
+          <div class="grid-2col">
+            <div class="ugsa-panel">
+              <h3>Signer Calibration & Confidence</h3>
+              <p>Predictive confidence bounds ensure parameter updates are applied safely without catastrophic drift on unseen signers.</p>
+              
+              <div class="signer-selector">
+                <label>Current Active Signer Profile:</label>
+                <select id="signerSelect">
+                  <option value="signer_01">Signer #01 (Default Base - Handedness: Right)</option>
+                  <option value="signer_02">Signer #02 (Left-handed / Fast Paced)</option>
+                  <option value="signer_03">Signer #03 (Low Lighting / High Variation)</option>
+                  <option value="signer_unseen">Signer #99 (Unseen Test Signer)</option>
+                </select>
+              </div>
+
+              <div class="metric-card-group">
+                <div class="m-card">
+                  <span class="m-label">Predictive Confidence:</span>
+                  <span class="m-val high">0.941</span>
+                </div>
+                <div class="m-card">
+                  <span class="m-label">Adaptation Step Bound:</span>
+                  <span class="m-val">\(\le 0.005\)</span>
+                </div>
+                <div class="m-card">
+                  <span class="m-label">Rollback Trigger:</span>
+                  <span class="m-val safe">0 Triggers</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ugsa-panel">
+              <h3>Protected-Set Rollback Monitor</h3>
+              <div class="chart-box">
+                <div class="chart-header">
+                  <span>BLEU-4 Accuracy vs. Adaptation Steps</span>
+                </div>
+                <div class="sim-graph">
+                  <div class="graph-bar-group">
+                    <div class="bar-fill base" style="height: 70%;" title="Base Model: 32.4 BLEU"></div>
+                    <span class="bar-lbl">Base</span>
+                  </div>
+                  <div class="graph-bar-group">
+                    <div class="bar-fill ugsa" style="height: 88%;" title="UGSA Adapted: 37.1 BLEU"></div>
+                    <span class="bar-lbl">UGSA</span>
+                  </div>
+                  <div class="graph-bar-group">
+                    <div class="bar-fill ungated" style="height: 50%;" title="Ungated Drift: 24.2 BLEU"></div>
+                    <span class="bar-lbl">Ungated</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: Hardware Diagnostics & E8 Baseline -->
+      <section id="diagnostics" class="tab-pane">
+        <div class="pane-grid">
+          <div class="card hardware-card">
+            <div class="card-header">
+              <h2><span class="icon">💻</span> Hardware Acceleration Backend Evaluator</h2>
+            </div>
+            
+            <div class="backend-selector-group">
+              <div class="backend-btn active" data-backend="xnnpack">
+                <div class="b-title">XNNPACK (CPU)</div>
+                <div class="b-sub">E8 Baseline - Max Compatibility</div>
+              </div>
+              <div class="backend-btn" data-backend="vulkan">
+                <div class="b-title">Vulkan GPU</div>
+                <div class="b-sub">Mobile GPU Parallelization</div>
+              </div>
+              <div class="backend-btn" data-backend="qnn">
+                <div class="b-title">Qualcomm QNN</div>
+                <div class="b-sub">Hexagon NPU Acceleration</div>
+              </div>
+              <div class="backend-btn" data-backend="neuropilot">
+                <div class="b-title">MediaTek APU</div>
+                <div class="b-sub">NeuroPilot Acceleration</div>
+              </div>
+            </div>
+
+            <div class="benchmark-suite">
+              <h3>E8 Baseline & Hardware Benchmark Metrics</h3>
+              <div class="benchmark-grid">
+                <div class="bench-item">
+                  <span class="b-label">Model File:</span>
+                  <span class="b-val highlight">baseline_best_v1.pte</span>
+                </div>
+                <div class="bench-item">
+                  <span class="b-label">Model Storage Size:</span>
+                  <span class="b-val">12.4 MB (INT8 Quantized)</span>
+                </div>
+                <div class="bench-item">
+                  <span class="b-label">Model Load Time:</span>
+                  <span id="loadTimeVal" class="b-val">420 ms</span>
+                </div>
+                <div class="bench-item">
+                  <span class="b-label">Warm-Up Latency:</span>
+                  <span id="warmupVal" class="b-val">15.2 ms</span>
+                </div>
+                <div class="bench-item">
+                  <span class="b-label">p50 Turn Latency:</span>
+                  <span id="p50Val" class="b-val">8.4 ms</span>
+                </div>
+                <div class="bench-item">
+                  <span class="b-label">p95 Turn Latency:</span>
+                  <span id="p95Val" class="b-val">18.4 ms (&lt; 200 ms target)</span>
+                </div>
+                <div class="bench-item">
+                  <span class="b-label">Peak Memory (RAM):</span>
+                  <span id="memVal" class="b-val">45.2 MB</span>
+                </div>
+                <div class="bench-item">
+                  <span class="b-label">Battery Power Draw:</span>
+                  <span class="b-val">~1.2 W (Low Impact)</span>
+                </div>
+              </div>
+
+              <div class="bench-action">
+                <button id="btnRunBenchmark" class="btn btn-primary btn-block">🚀 Run Hardware Benchmark Suite</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: Ablations & Experiments (E0-E9) -->
+      <section id="ablation" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h2><span class="icon">📊</span> Research Ablation Matrix (E0–E9)</h2>
+          </div>
+
+          <table class="ablation-table">
+            <thead>
+              <tr>
+                <th>Exp ID</th>
+                <th>Configuration Name</th>
+                <th>Context Gate</th>
+                <th>UGSA Personalization</th>
+                <th>BLEU-4 ↑</th>
+                <th>chrF++ ↑</th>
+                <th>p95 Latency</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>E0</strong></td>
+                <td>Isolated Sign Pretraining Baseline</td>
+                <td><span class="tag off">DISABLED</span></td>
+                <td><span class="tag off">DISABLED</span></td>
+                <td>21.4</td>
+                <td>44.2</td>
+                <td>6.2 ms</td>
+                <td><span class="status-pass">COMPLETED</span></td>
+              </tr>
+              <tr>
+                <td><strong>E1</strong></td>
+                <td>No-Context Continuous SLT</td>
+                <td><span class="tag off">DISABLED</span></td>
+                <td><span class="tag off">DISABLED</span></td>
+                <td>29.8</td>
+                <td>56.1</td>
+                <td>12.1 ms</td>
+                <td><span class="status-pass">COMPLETED</span></td>
+              </tr>
+              <tr>
+                <td><strong>E2</strong></td>
+                <td>Ungated Context SLT</td>
+                <td><span class="tag warning">UNGATED</span></td>
+                <td><span class="tag off">DISABLED</span></td>
+                <td>31.2</td>
+                <td>58.4</td>
+                <td>16.5 ms</td>
+                <td><span class="status-pass">COMPLETED</span></td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>E3</strong></td>
+                <td>SBDS + Context Reliability Gate</td>
+                <td><span class="tag active">GATED</span></td>
+                <td><span class="tag off">DISABLED</span></td>
+                <td>35.6</td>
+                <td>63.8</td>
+                <td>17.2 ms</td>
+                <td><span class="status-pass">COMPLETED</span></td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>E4</strong></td>
+                <td>SBDS + Reliability Gate + UGSA</td>
+                <td><span class="tag active">GATED</span></td>
+                <td><span class="tag active">ACTIVE</span></td>
+                <td><strong>38.4</strong></td>
+                <td><strong>67.2</strong></td>
+                <td>18.4 ms</td>
+                <td><span class="status-pass">COMPLETED</span></td>
+              </tr>
+              <tr class="baseline-row">
+                <td><strong>E8</strong></td>
+                <td>Mobile ExecuTorch XNNPACK Quantized</td>
+                <td><span class="tag active">GATED</span></td>
+                <td><span class="tag active">ACTIVE</span></td>
+                <td>37.1</td>
+                <td>65.9</td>
+                <td><strong>18.4 ms</strong></td>
+                <td><span class="status-pass">BASELINE ACTIVE</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

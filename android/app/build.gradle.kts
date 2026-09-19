@@ -67,7 +67,9 @@ dependencies {
     // MediaPipe Tasks Vision
     implementation("com.google.mediapipe:tasks-vision:0.10.9")
 
-    // ExecuTorch for Edge ML (E8 baseline)
+    // ExecuTorch for Edge ML (E8 baseline + Accelerators)
     implementation("org.pytorch:executorch:0.1.0")
     implementation("org.pytorch:executorch-xnnpack:0.1.0")
+    implementation("org.pytorch:executorch-vulkan:0.1.0")
+    implementation("org.pytorch:executorch-qnn:0.1.0")
 }

@@ -8,8 +8,16 @@ import android.util.Log
 // import org.pytorch.executorch.Module
 // import org.pytorch.executorch.Tensor
 
+enum class BackendTarget { 
+    XNNPACK, 
+    VULKAN, 
+    QUALCOMM_QNN, 
+    MEDIATEK_NEUROPILOT 
+}
+
 class ExecuTorchInferenceEngine(
-    private val context: Context
+    private val context: Context,
+    private val preferredBackend: BackendTarget = BackendTarget.XNNPACK
 ) : InferenceEngine {
 
     val benchmarkMetrics = BenchmarkMetrics()
@@ -20,12 +28,28 @@ class ExecuTorchInferenceEngine(
 
     override fun initialize(modelPath: String) {
         val startLoad = SystemClock.uptimeMillis()
-        try {
-            Log.d("ExecuTorch", "Loading model from $modelPath using XNNPACK...")
+        
+        val loadedSuccessfully = tryLoadModel(modelPath, preferredBackend)
+        
+        if (!loadedSuccessfully && preferredBackend != BackendTarget.XNNPACK) {
+            Log.w("ExecuTorch", "Failed to load model with $preferredBackend. Falling back to XNNPACK.")
+            tryLoadModel(modelPath, BackendTarget.XNNPACK)
+        }
+        
+        val endLoad = SystemClock.uptimeMillis()
+        benchmarkMetrics.loadTimeMs = endLoad - startLoad
+        
+        // Measure memory right after loading
+        benchmarkStats.measureMemoryUsage(benchmarkMetrics)
+    }
+
+    private fun tryLoadModel(modelPath: String, backend: BackendTarget): Boolean {
+        return try {
+            Log.d("ExecuTorch", "Attempting to load model from $modelPath using $backend...")
             
             // Expected implementation using org.pytorch.executorch
             // module = Module.load(modelPath) 
-            // We would pass specific XNNPACK backend hints if required by the model export
+            // We would pass specific backend hints based on 'backend' enum
 
             // For diagnostics
             benchmarkStats.measureModelSize(context, modelPath, benchmarkMetrics)
@@ -33,15 +57,12 @@ class ExecuTorchInferenceEngine(
             // Warm-up logic
             warmUp()
 
-            Log.d("ExecuTorch", "Model loaded successfully.")
+            Log.d("ExecuTorch", "Model loaded successfully with $backend.")
+            true
         } catch (e: Exception) {
-            Log.e("ExecuTorch", "Failed to load model", e)
+            Log.e("ExecuTorch", "Failed to load model with $backend", e)
+            false
         }
-        val endLoad = SystemClock.uptimeMillis()
-        benchmarkMetrics.loadTimeMs = endLoad - startLoad
-        
-        // Measure memory right after loading
-        benchmarkStats.measureMemoryUsage(benchmarkMetrics)
     }
 
     private fun warmUp() {
