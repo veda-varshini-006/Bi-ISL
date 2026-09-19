@@ -97,7 +97,7 @@ fun AppNavigation() {
                     selected = currentRoute == "avatar",
                     onClick = { navController.navigate("avatar") },
                     icon = { Icon(Icons.Default.Person, contentDescription = "Avatar") },
-                    label = { Text("3D Avatar") }
+                    label = { Text("3D Avatar Studio") }
                 )
                 NavigationBarItem(
                     selected = currentRoute == "settings",
@@ -142,8 +142,8 @@ fun ConversationScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Model Status: ACTIVE (E8 Baseline)", color = AccentEmerald, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Text("PTE: baseline_best_v1.pte (XNNPACK)", color = TextMuted, fontSize = 12.sp)
+                    Text("Model Status: ACTIVE (PyTorch Backend)", color = AccentEmerald, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("Checkpoints: baseline_best_v1.pt", color = TextMuted, fontSize = 12.sp)
                 }
                 Surface(
                     shape = CircleShape,
@@ -172,14 +172,14 @@ fun ConversationScreen(navController: NavController) {
             Card(
                 modifier = Modifier
                     .weight(1f)
-                    .clickable { navController.navigate("input") },
+                    .clickable { navController.navigate("avatar") },
                 colors = CardDefaults.cardColors(containerColor = CardBackground)
             ) {
                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = SecondaryBlue, modifier = Modifier.size(32.dp))
+                    Icon(Icons.Default.Person, contentDescription = null, tint = SecondaryBlue, modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("English -> ISL", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
-                    Text("Avatar Speech/Text", color = TextMuted, fontSize = 11.sp)
+                    Text("English -> Avatar", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
+                    Text("Side-by-Side Sign Studio", color = TextMuted, fontSize = 11.sp)
                 }
             }
         }
@@ -346,39 +346,7 @@ fun CameraScreen(navController: NavController) {
 
 @Composable
 fun InputScreen(navController: NavController) {
-    var textInput by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text("English to ISL Speech/Text Input", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
-        Text("Convert natural language English text or speech into structured ISL Representation for 3D Avatar rendering.", color = TextMuted, fontSize = 13.sp)
-
-        OutlinedTextField(
-            value = textInput,
-            onValueChange = { textInput = it },
-            label = { Text("Enter English sentence...") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryPurple,
-                unfocusedBorderColor = TextMuted,
-                focusedLabelColor = PrimaryPurple
-            )
-        )
-
-        Button(
-            onClick = { navController.navigate("avatar") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = SecondaryBlue)
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Translate & Render on 3D Avatar")
-        }
-    }
+    AvatarViewScreen(navController)
 }
 
 @Composable
@@ -409,45 +377,106 @@ fun TranslationResultScreen(navController: NavController) {
 
 @Composable
 fun AvatarViewScreen(navController: NavController) {
+    var textInput by remember { mutableStateOf("I will go to the doctor today for my appointment") }
+    var currentGlosses by remember { mutableStateOf(listOf("DOCTOR", "APPOINTMENT", "TODAY", "TIME", "WHAT")) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("3D Avatar Renderer (O6)", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
+        Text("Side-by-Side English & 3D ISL Avatar", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
 
-        // Canvas 3D Avatar Simulation
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackground)
+        // Side-by-Side Layout Row
+        Row(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val cx = size.width / 2
-                    val cy = size.height / 2
-                    drawCircle(color = PrimaryPurple, radius = 50f, center = Offset(cx, cy - 40))
-                    drawLine(color = AccentEmerald, start = Offset(cx - 60, cy + 30), end = Offset(cx + 60, cy + 30), strokeWidth = 8f)
-                }
-                Surface(
-                    color = DarkBackground.copy(alpha = 0.8f),
-                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(8.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        "NMM: Eyebrows Raised | Head Tilt Left | Mouth: /DOCTOR/",
-                        color = AccentEmerald,
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(8.dp)
+            // Left Side: Text Input & Synthesized Glosses
+            Card(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground)
+            ) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("1. English Text Input", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
+                    
+                    OutlinedTextField(
+                        value = textInput,
+                        onValueChange = { 
+                            textInput = it
+                            currentGlosses = it.uppercase().split(" ").filter { word -> word.length > 2 }
+                        },
+                        label = { Text("Type sentence...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, unfocusedBorderColor = TextMuted)
                     )
+
+                    Text("Synthesized Glosses:", color = TextMuted, fontSize = 11.sp)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        currentGlosses.take(4).forEach { g ->
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = PrimaryPurple.copy(alpha = 0.2f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryPurple)
+                            ) {
+                                Text(g, color = AccentEmerald, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text("NMM: Eyebrows Raised | Head Tilt Left", color = TextMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                }
+            }
+
+            // Right Side: Live 3D Avatar Rendering Canvas (Beside Text!)
+            Card(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground)
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val cx = size.width / 2
+                        val cy = size.height / 2
+
+                        // Head
+                        drawCircle(color = PrimaryPurple, radius = 40f, center = Offset(cx, cy - 50))
+                        
+                        // Eyes
+                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx - 15, cy - 60))
+                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx + 15, cy - 60))
+
+                        // Torso
+                        drawLine(color = SecondaryBlue, start = Offset(cx - 40, cy + 50), end = Offset(cx + 40, cy + 50), strokeWidth = 6f)
+                        drawLine(color = SecondaryBlue, start = Offset(cx, cy - 10), end = Offset(cx, cy + 50), strokeWidth = 8f)
+
+                        // Signing Arms
+                        drawLine(color = AccentEmerald, start = Offset(cx - 30, cy), end = Offset(cx - 60, cy + 30), strokeWidth = 6f)
+                        drawLine(color = AccentEmerald, start = Offset(cx + 30, cy), end = Offset(cx + 60, cy + 30), strokeWidth = 6f)
+                        drawCircle(color = AccentEmerald, radius = 10f, center = Offset(cx - 60, cy + 30))
+                        drawCircle(color = AccentEmerald, radius = 10f, center = Offset(cx + 60, cy + 30))
+                    }
+
+                    Surface(
+                        color = DarkBackground.copy(alpha = 0.85f),
+                        modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(4.dp),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            "Signing: [${currentGlosses.firstOrNull() ?: "READY"}]",
+                            color = AccentEmerald,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(4.dp)
+                        )
+                    }
                 }
             }
         }
 
-        Button(onClick = { navController.navigate("conversation") }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple)) {
+        Button(onClick = { navController.navigate("conversation") }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple), modifier = Modifier.fillMaxWidth()) {
             Text("Back to Main Screen")
         }
     }
@@ -468,7 +497,7 @@ fun SettingsScreen(navController: NavController) {
         Card(colors = CardDefaults.cardColors(containerColor = CardBackground), modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Model Configuration", fontWeight = FontWeight.Bold, color = Color.White)
-                Text("PTE Weight File: baseline_best_v1.pte", color = TextMuted, fontSize = 12.sp)
+                Text("PyTorch Weights: baseline_best_v1.pt", color = TextMuted, fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Hardware Backend Evaluator", fontWeight = FontWeight.Bold, color = Color.White)
@@ -502,7 +531,7 @@ fun ResearchDiagnosticsScreen(navController: NavController) {
 
         Card(colors = CardDefaults.cardColors(containerColor = CardBackground), modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Model: baseline_best_v1.pte (XNNPACK INT8)", color = AccentEmerald, fontWeight = FontWeight.Bold)
+                Text("Model: baseline_best_v1.pt (XNNPACK INT8)", color = AccentEmerald, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 val metrics = listOf(

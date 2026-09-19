@@ -190,7 +190,7 @@ body.dark-theme {
 .grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
   margin-top: 16px;
 }
 
@@ -216,6 +216,87 @@ body.dark-theme {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Side-by-Side Studio Card */
+.studio-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.studio-col h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.studio-col .sub-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.input-box-group textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+
+.presets-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.preset-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--accent);
+}
+
+.avatar-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.now-signing-badge {
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid var(--primary);
+  color: #a5b4fc;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.avatar-canvas-wrapper.studio-wrapper {
+  height: 340px;
 }
 
 /* Video & Landmark Canvas */
@@ -480,7 +561,6 @@ body.dark-theme {
   font-size: 10px;
   color: var(--text-muted);
   margin-bottom: 4px;
-
 }
 
 .bubble-trans {

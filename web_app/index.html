@@ -23,11 +23,11 @@
     <div class="header-status">
       <div class="chip engine-chip">
         <span class="dot active"></span>
-        <span id="backendTag">Backend: XNNPACK (CPU FP32/INT8)</span>
+        <span id="backendTag">Backend: Connecting...</span>
       </div>
       <div class="chip pte-chip">
         <span class="label">Model:</span>
-        <span id="modelTag">baseline_best_v1.pte</span>
+        <span id="modelTag">baseline_best_v1.pt</span>
       </div>
       <div class="chip latency-chip">
         <span class="label">p95 Latency:</span>
@@ -49,10 +49,10 @@
       </div>
       <div class="nav-item" data-tab="avatar">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
-        <span>3D Avatar Renderer</span>
+        <span>3D Avatar Side-by-Side Studio</span>
       </div>
       <div class="nav-item" data-tab="signer-adaptation">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg>
         <span>Signer Adaptation (UGSA)</span>
       </div>
       <div class="nav-item" data-tab="diagnostics">
@@ -61,7 +61,7 @@
       </div>
       <div class="nav-item" data-tab="ablation">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Ablations & Metrics (E0–E9)</span>
+        <span>Ablations & Metrics (E0–E10)</span>
       </div>
     </nav>
 
@@ -75,7 +75,6 @@
               <h2><span class="icon">🎥</span> Camera & MediaPipe Live Landmarks</h2>
               <div class="controls-row">
                 <button id="btnWebcam" class="btn btn-primary">Start Webcam</button>
-                <button id="btnSimulate" class="btn btn-secondary">Simulate Sign Feed</button>
               </div>
             </div>
             <div class="video-container">
@@ -180,7 +179,7 @@
             </div>
 
             <div class="chat-input-row">
-              <input type="text" id="userTextInput" placeholder="Type English sentence or speak to convert to ISL Avatar..." />
+              <input type="text" id="userTextInput" placeholder="Type English sentence to translate to ISL Avatar..." />
               <button id="btnSendInput" class="btn btn-primary">Translate & Render</button>
             </div>
           </div>
@@ -228,63 +227,73 @@
         </div>
       </section>
 
-      <!-- TAB 3: 3D Avatar Renderer -->
+      <!-- TAB 3: 3D Avatar Side-by-Side Studio -->
       <section id="avatar" class="tab-pane">
-        <div class="pane-grid">
-          <div class="card avatar-render-card">
-            <div class="card-header">
-              <h2><span class="icon">👤</span> Linguistically Grounded 3D ISL Avatar</h2>
-              <div class="avatar-controls">
-                <label>Speed:</label>
-                <input type="range" id="avatarSpeed" min="0.5" max="2.0" step="0.1" value="1.0">
-                <span id="speedVal">1.0x</span>
-              </div>
-            </div>
-
-            <div class="avatar-canvas-wrapper">
-              <canvas id="avatarCanvas" width="540" height="420"></canvas>
-              <div class="avatar-overlay-info">
-                <div class="nmm-badge" id="nmmDisplay">NMM: Eyebrows Raised | Head Tilt Left | Mouth: "DOCTOR"</div>
-              </div>
-            </div>
-
-            <div class="avatar-playbar">
-              <button id="btnPlayAvatar" class="btn btn-primary btn-sm">▶ Play Sign Sequence</button>
-              <button id="btnPauseAvatar" class="btn btn-secondary btn-sm">⏸ Pause</button>
-              <div class="timeline-slider">
-                <input type="range" id="timelineRange" min="0" max="100" value="35">
-              </div>
-            </div>
+        <div class="card side-by-side-card">
+          <div class="card-header">
+            <h2><span class="icon">👤</span> Side-by-Side Text & 3D ISL Avatar Studio</h2>
+            <span class="status-badge live">REAL-TIME SIGN RENDERING</span>
           </div>
 
-          <div class="card representation-card">
-            <div class="card-header">
-              <h2><span class="icon">📜</span> Intermediate ISL Representation (O5/O6)</h2>
-            </div>
-            <div class="representation-details">
-              <div class="rep-box">
-                <h4>1. Synthesized Gloss Alignment</h4>
-                <div class="code-block">
-[00:00 - 00:40] GLOSS: DOCTOR (Dominant Hand: Right, Location: Wrist Tap)
-[00:40 - 01:10] GLOSS: APPOINTMENT (Two-handed circle & lock)
-[01:10 - 01:50] GLOSS: TIME-QUESTION (Index finger tap wrist + eyebrows raised)
+          <div class="grid-2col side-by-side-container">
+            <!-- Left Column: User Input & Synthesized Representation -->
+            <div class="studio-col left-col">
+              <h3>1. User English Text Input</h3>
+              <p class="sub-text">Enter any sentence below. The Python backend will convert it into ISL glosses & non-manual facial expressions, rendering the sign language directly on the Avatar beside it!</p>
+
+              <div class="input-box-group">
+                <textarea id="studioTextInput" rows="3" placeholder="Type text here e.g. 'I will go to the doctor today for my appointment'"></textarea>
+                <button id="btnRenderStudio" class="btn btn-primary btn-block">✨ Translate to Sign Language Avatar</button>
+              </div>
+
+              <div class="presets-row">
+                <span class="preset-label">Preset Sentences:</span>
+                <button class="preset-btn" data-text="I will go to the doctor today">Doctor Visit</button>
+                <button class="preset-btn" data-text="Where is the train station?">Train Station</button>
+                <button class="preset-btn" data-text="What time is my appointment?">Appointment Time</button>
+                <button class="preset-btn" data-text="Hello, thank you for your help!">Greeting</button>
+              </div>
+
+              <div class="representation-details">
+                <div class="rep-box">
+                  <h4>Backend Synthesized Gloss Sequence:</h4>
+                  <div id="studioGlossDisplay" class="gloss-tokens">
+                    <span class="token">DOCTOR</span>
+                    <span class="token">APPOINTMENT</span>
+                    <span class="token">TODAY</span>
+                    <span class="token">TIME</span>
+                    <span class="token">WHAT</span>
+                  </div>
+                </div>
+
+                <div class="rep-box">
+                  <h4>Non-Manual Markers (NMM):</h4>
+                  <div id="studioNmmDisplay" class="code-block">
+Eyebrows: RAISED (Question) | Head Pose: TILT_LEFT | Mouthings: /dok-tor/
+                  </div>
                 </div>
               </div>
-              <div class="rep-box">
-                <h4>2. Non-Manual Markers (NMM) Timeline</h4>
-                <div class="nmm-timeline">
-                  <div class="nmm-track">
-                    <span class="track-label">Facial Expression:</span>
-                    <span class="track-segment active">Eyebrow Raise (Q-Question)</span>
-                  </div>
-                  <div class="nmm-track">
-                    <span class="track-label">Mouthings:</span>
-                    <span class="track-segment active">/dok-tor/</span>
-                  </div>
-                  <div class="nmm-track">
-                    <span class="track-label">Head Pose:</span>
-                    <span class="track-segment">Forward Tilt</span>
-                  </div>
+            </div>
+
+            <!-- Right Column: 3D Avatar (Beside the text!) -->
+            <div class="studio-col right-col">
+              <div class="avatar-header-row">
+                <h3>2. Live ISL Avatar Rendering (Beside Text)</h3>
+                <div class="now-signing-badge" id="nowSigningTag">Now Signing: [DOCTOR]</div>
+              </div>
+
+              <div class="avatar-canvas-wrapper studio-wrapper">
+                <canvas id="avatarCanvas" width="540" height="400"></canvas>
+                <div class="avatar-overlay-info">
+                  <div class="nmm-badge" id="nmmDisplay">NMM: Eyebrows Raised | Head Tilt Left | Mouth: "DOCTOR"</div>
+                </div>
+              </div>
+
+              <div class="avatar-playbar">
+                <button id="btnPlayAvatar" class="btn btn-primary btn-sm">▶ Play Sign Sequence</button>
+                <button id="btnPauseAvatar" class="btn btn-secondary btn-sm">⏸ Pause</button>
+                <div class="timeline-slider">
+                  <input type="range" id="timelineRange" min="0" max="100" value="35">
                 </div>
               </div>
             </div>
@@ -389,7 +398,7 @@
               <div class="benchmark-grid">
                 <div class="bench-item">
                   <span class="b-label">Model File:</span>
-                  <span class="b-val highlight">baseline_best_v1.pte</span>
+                  <span class="b-val highlight">baseline_best_v1.pt</span>
                 </div>
                 <div class="bench-item">
                   <span class="b-label">Model Storage Size:</span>

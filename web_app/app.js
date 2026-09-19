@@ -1,4 +1,4 @@
-// Bi-ISL Interactive Web Suite - Live Backend Integration
+// Bi-ISL Interactive Web Suite - Live Backend & Side-by-Side Studio Integration
 const BACKEND_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,20 +23,88 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`${BACKEND_URL}/api/status`);
       if (res.ok) {
         const data = await res.json();
-        console.log("Connected to Python FastAPI Backend:", data);
         const backendTag = document.getElementById("backendTag");
         if (backendTag) {
-          backendTag.innerText = `Backend: LIVE PyTorch (${data.device}) - ${data.model_file}`;
+          backendTag.innerText = `Backend: PyTorch (${data.device}) - LIVE`;
         }
       }
     } catch (e) {
-      console.warn("Backend server not reached at http://localhost:8000. Operating in offline/simulated mode.", e);
+      console.warn("Backend server offline. Running simulated mode.");
     }
   }
 
   checkBackendStatus();
 
-  // Landmark Canvas Simulation & Live Backend Inference Loop
+  // Side-by-Side Text-to-ISL Studio Handler
+  const btnRenderStudio = document.getElementById("btnRenderStudio");
+  const studioTextInput = document.getElementById("studioTextInput");
+  const studioGlossDisplay = document.getElementById("studioGlossDisplay");
+  const studioNmmDisplay = document.getElementById("studioNmmDisplay");
+  const nowSigningTag = document.getElementById("nowSigningTag");
+
+  let activeGlosses = ["DOCTOR", "APPOINTMENT", "TODAY", "TIME", "WHAT"];
+  let currentGlossIndex = 0;
+
+  async function handleStudioTranslation(text) {
+    if (!text) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/text_to_isl`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        activeGlosses = data.isl_gloss_sequence;
+
+        // Render Gloss Tokens
+        if (studioGlossDisplay) {
+          studioGlossDisplay.innerHTML = activeGlosses
+            .map(g => `<span class="token">${g}</span>`)
+            .join(" ");
+        }
+
+        // Render NMM Specs
+        if (studioNmmDisplay) {
+          const nmm = data.nmm_specifications;
+          studioNmmDisplay.innerText = `Eyebrows: ${nmm.eyebrows} | Head Pose: ${nmm.head_tilt} | Mouthings: ${nmm.mouthings}`;
+        }
+      }
+    } catch (err) {
+      // Fallback
+      activeGlosses = text.toUpperCase().split(" ").filter(w => w.length > 2);
+      if (studioGlossDisplay) {
+        studioGlossDisplay.innerHTML = activeGlosses
+          .map(g => `<span class="token">${g}</span>`)
+          .join(" ");
+      }
+    }
+
+    currentGlossIndex = 0;
+    if (nowSigningTag) {
+      nowSigningTag.innerText = `Now Signing: [${activeGlosses[0] || 'READY'}]`;
+    }
+  }
+
+  if (btnRenderStudio && studioTextInput) {
+    btnRenderStudio.addEventListener("click", () => {
+      handleStudioTranslation(studioTextInput.value.trim());
+    });
+  }
+
+  // Preset Sentence Buttons
+  const presetBtns = document.querySelectorAll(".preset-btn");
+  presetBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = btn.getAttribute("data-text");
+      if (studioTextInput) studioTextInput.value = text;
+      handleStudioTranslation(text);
+    });
+  });
+
+  // Landmark Canvas Simulation
   const landmarkCanvas = document.getElementById("landmarkCanvas");
   const ctx = landmarkCanvas ? landmarkCanvas.getContext("2d") : null;
   let isWebcamRunning = false;
@@ -52,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res.ok) {
         const data = await res.json();
         
-        // Update UI with real backend predictions
         const glossSeq = document.getElementById("glossSequence");
         if (glossSeq && data.gloss_sequence) {
           glossSeq.innerHTML = data.gloss_sequence
@@ -65,30 +132,16 @@ document.addEventListener("DOMContentLoaded", () => {
           engOut.innerText = `"${data.english_sentence}"`;
         }
 
-        const gateBar = document.getElementById("gateProgressBar");
-        const gateValText = document.getElementById("gateValText");
-        const gateState = document.getElementById("gateState");
-
-        if (gateBar && data.context_reliability_gate) {
-          const pct = data.context_reliability_gate.visual_evidence_weight;
-          gateBar.style.width = `${pct}%`;
-          if (gateValText) gateValText.innerText = `${pct}% Visual Driven`;
-          if (gateState) gateState.innerText = `Status: ${data.context_reliability_gate.status}`;
-        }
-
         const latTag = document.getElementById("latencyTag");
         if (latTag) latTag.innerText = `${data.inference_latency_ms} ms`;
       }
-    } catch (err) {
-      // Graceful fallback to client simulation
-    }
+    } catch (err) {}
   }
 
   function drawSimulatedLandmarks() {
     if (!ctx) return;
     ctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
 
-    // Draw dark background grid
     ctx.fillStyle = "#090d16";
     ctx.fillRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
     
@@ -104,7 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = Date.now() * 0.003;
     frameCount++;
 
-    // 1. Pose Skeleton
     const shoulderL = { x: 260 + Math.sin(t) * 10, y: 220 };
     const shoulderR = { x: 380 - Math.sin(t) * 10, y: 220 };
     const elbowL = { x: 210 + Math.cos(t * 1.5) * 20, y: 310 };
@@ -123,14 +175,12 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.lineTo(wristR.x, wristR.y);
     ctx.stroke();
 
-    // 2. Face Landmarks Mesh
     ctx.strokeStyle = "rgba(168, 85, 247, 0.6)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(head.x, head.y, 45, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 3. Hand Landmarks
     function drawHand(wrist, color) {
       ctx.fillStyle = color;
       ctx.strokeStyle = color;
@@ -140,21 +190,14 @@ document.addEventListener("DOMContentLoaded", () => {
         let tipX = wrist.x + Math.sin(fingerAngle) * 45;
         let tipY = wrist.y - Math.cos(fingerAngle) * 45;
 
-        ctx.beginPath();
-        ctx.moveTo(wrist.x, wrist.y);
-        ctx.lineTo(tipX, tipY);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(tipX, tipY, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.moveTo(wrist.x, wrist.y); ctx.lineTo(tipX, tipY); ctx.stroke();
+        ctx.beginPath(); ctx.arc(tipX, tipY, 4, 0, Math.PI * 2); ctx.fill();
       }
     }
 
     drawHand(wristL, "#10b981");
     drawHand(wristR, "#f59e0b");
 
-    // Send frame landmarks to live Python backend every 30 frames
     if (frameCount % 30 === 0) {
       const dummyLandmarks = Array.from({ length: 258 }, (_, i) => Math.sin(t + i * 0.1));
       sendLandmarksToBackend([dummyLandmarks]);
@@ -194,18 +237,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3D Avatar Rendering Canvas
+  // 3D Avatar Rendering Canvas (Driven by Active Glosses)
   const avatarCanvas = document.getElementById("avatarCanvas");
   const actx = avatarCanvas ? avatarCanvas.getContext("2d") : null;
   let isAvatarPlaying = true;
+  let signCycleTimer = 0;
 
   function render3DAvatar() {
     if (!actx) return;
     actx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
 
-    const time = Date.now() * 0.0025;
+    const time = Date.now() * 0.003;
     const cx = avatarCanvas.width / 2;
     const cy = avatarCanvas.height / 2;
+
+    // Cycle through active glosses every 1.5 seconds
+    signCycleTimer++;
+    if (signCycleTimer % 90 === 0 && activeGlosses.length > 0) {
+      currentGlossIndex = (currentGlossIndex + 1) % activeGlosses.length;
+      if (nowSigningTag) {
+        nowSigningTag.innerText = `Now Signing: [${activeGlosses[currentGlossIndex]}]`;
+      }
+    }
 
     actx.fillStyle = "#1e293b";
     actx.strokeStyle = "#818cf8";
@@ -220,10 +273,12 @@ document.addEventListener("DOMContentLoaded", () => {
     actx.beginPath(); actx.arc(cx - 18, cy - 90, 6, 0, Math.PI * 2); actx.fill();
     actx.beginPath(); actx.arc(cx + 18, cy - 90, 6, 0, Math.PI * 2); actx.fill();
 
-    const armLX = cx - 50 + Math.cos(time * 2) * 60;
-    const armLY = cy + 20 + Math.sin(time * 2) * 40;
-    const armRX = cx + 50 + Math.sin(time * 2.5) * 60;
-    const armRY = cy + 20 + Math.cos(time * 2.5) * 40;
+    // Sign Gesture Motion mapped to active gloss index
+    const signFrequency = 2 + (currentGlossIndex % 3) * 0.5;
+    const armLX = cx - 50 + Math.cos(time * signFrequency) * 65;
+    const armLY = cy + 20 + Math.sin(time * signFrequency) * 45;
+    const armRX = cx + 50 + Math.sin(time * (signFrequency + 0.5)) * 65;
+    const armRY = cy + 20 + Math.cos(time * (signFrequency + 0.5)) * 45;
 
     actx.strokeStyle = "#a7f3d0";
     actx.lineWidth = 6;
@@ -245,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRunBenchmark = document.getElementById("btnRunBenchmark");
   if (btnRunBenchmark) {
     btnRunBenchmark.addEventListener("click", async () => {
-      btnRunBenchmark.innerText = "⏳ Running Hardware Benchmarks on PyTorch Backend...";
+      btnRunBenchmark.innerText = "⏳ Running Hardware Benchmarks...";
       btnRunBenchmark.disabled = true;
 
       try {
@@ -255,11 +310,9 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("p50Val").innerText = `${benchData.p50_latency_ms} ms`;
           document.getElementById("p95Val").innerText = `${benchData.p95_latency_ms} ms (< 200 ms target)`;
           document.getElementById("memVal").innerText = `${benchData.memory_ram_mb} MB`;
-          btnRunBenchmark.innerText = `✅ PyTorch Benchmark Completed! (p95: ${benchData.p95_latency_ms}ms)`;
+          btnRunBenchmark.innerText = `✅ Benchmark Completed! (p95: ${benchData.p95_latency_ms}ms)`;
         }
-      } catch (err) {
-        btnRunBenchmark.innerText = "✅ Benchmark Completed!";
-      }
+      } catch (err) {}
 
       setTimeout(() => {
         btnRunBenchmark.innerText = "🚀 Run Hardware Benchmark Suite";
@@ -268,33 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Adversarial Context Injection via Backend SBDS API
-  const btnInjectClean = document.getElementById("btnInjectClean");
-  const btnInjectMisleading = document.getElementById("btnInjectMisleading");
-
-  if (btnInjectClean && btnInjectMisleading) {
-    btnInjectClean.addEventListener("click", async () => {
-      try {
-        await fetch(`${BACKEND_URL}/api/sbds`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ misleading_context: false })
-        });
-      } catch (e) {}
-    });
-
-    btnInjectMisleading.addEventListener("click", async () => {
-      try {
-        await fetch(`${BACKEND_URL}/api/sbds`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ misleading_context: true })
-        });
-      } catch (e) {}
-    });
-  }
-
-  // Text-to-ISL English Input via Backend API
+  // Text-to-ISL English Input in Chat Tab
   const btnSendInput = document.getElementById("btnSendInput");
   const userTextInput = document.getElementById("userTextInput");
   const chatHistory = document.getElementById("chatHistory");
@@ -326,19 +353,15 @@ document.addEventListener("DOMContentLoaded", () => {
           agentBubble.innerHTML = `
             <div class="bubble-meta">Backend Synthesized ISL Representation</div>
             <div class="bubble-content">Glosses: [${data.isl_gloss_sequence.join(" ")}]</div>
-            <div class="bubble-trans">NMM: ${JSON.stringify(data.nmm_specifications)}</div>
+            <div class="bubble-trans">3D Avatar rendering sign sequence live beside text.</div>
           `;
           chatHistory.appendChild(agentBubble);
+
+          // Update studio avatar as well
+          activeGlosses = data.isl_gloss_sequence;
+          currentGlossIndex = 0;
         }
-      } catch (err) {
-        const agentBubble = document.createElement("div");
-        agentBubble.className = "chat-bubble agent-eng";
-        agentBubble.innerHTML = `
-          <div class="bubble-meta">ISL Avatar Representation</div>
-          <div class="bubble-content">Synthesized Gloss: [${text.toUpperCase().split(" ").join(" ")}]</div>
-        `;
-        chatHistory.appendChild(agentBubble);
-      }
+      } catch (err) {}
 
       userTextInput.value = "";
       chatHistory.scrollTop = chatHistory.scrollHeight;
