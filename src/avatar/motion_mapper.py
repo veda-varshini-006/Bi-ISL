@@ -1,12 +1,14 @@
-"""Motion Sequence Mapper Subsystem (Prompt 74).
+"""Motion Sequence Mapper Subsystem (Prompt 74 & Prompt 75).
 
-Maps ISL IR tokens into retargeted skeletal motion keyframes onto Unity Humanoid Rigs.
+Maps ISL IR tokens into retargeted skeletal motion keyframes onto Unity Humanoid Rigs,
+and synthesizes controlled transitions between consecutive sign clips.
 """
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
 from src.avatar.animation_clip_library import AnimationClip, AnimationClipKeyframe, AnimationClipLibrary
 from src.avatar.motion_retargeter import MotionRetargeter, HumanoidRigConfig
+from src.avatar.transition_engine import TransitionEngine, CoarticulationMetadata
 
 
 class BaseMotionMapper(ABC):
@@ -27,9 +29,10 @@ class RetargetingMotionMapper(BaseMotionMapper):
     ) -> None:
         self.clip_library = clip_library or AnimationClipLibrary.create_seeded_library()
         self.retargeter = MotionRetargeter(target_config or HumanoidRigConfig())
+        self.transition_engine = TransitionEngine()
 
     def map_to_motion_keyframes(self, isl_ir: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Map ISL IR representation to retargeted motion keyframe dictionaries."""
+        """Map single ISL IR representation to retargeted motion keyframe dictionaries."""
         gloss = isl_ir.get("gloss") or isl_ir.get("sign_gloss") or "HELP"
         clip = self.clip_library.get_clip_by_gloss(gloss)
         if clip is None:
@@ -46,3 +49,53 @@ class RetargetingMotionMapper(BaseMotionMapper):
         )
 
         return [kf.to_dict() for kf in retargeted_clip.keyframes]
+
+    def map_sequence_with_transitions(
+        self,
+        isl_ir_sequence: List[Dict[str, Any]],
+        default_transition_ms: float = 120.0,
+        hold_duration_ms: float = 0.0,
+        hold_handshape: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Map sequence of ISL IR tokens into a stitched retargeted clip with controlled transitions."""
+        if not isl_ir_sequence:
+            return []
+
+        clips_to_stitch: List[AnimationClip] = []
+        meta_map: Dict[str, CoarticulationMetadata] = {}
+
+        for item in isl_ir_sequence:
+            gloss = item.get("gloss") or item.get("sign_gloss") or "HELP"
+            clip = self.clip_library.get_clip_by_gloss(gloss)
+            if clip is None:
+                clip = self.clip_library.get_clip_by_gloss("HELP")
+
+            if clip:
+                scale = float(item.get("scale_factor", 1.0))
+                target_handedness = item.get("handedness")
+                retargeted = self.retargeter.retarget_clip(clip, scale_factor=scale, target_handedness=target_handedness)
+                clips_to_stitch.append(retargeted)
+
+                if "coarticulation" in item:
+                    c_data = item["coarticulation"]
+                    meta_map[retargeted.clip_id] = CoarticulationMetadata(
+                        clip_id=retargeted.clip_id,
+                        gloss=retargeted.gloss,
+                        transition_duration_ms=c_data.get("transition_duration_ms", default_transition_ms),
+                        hold_duration_ms=c_data.get("hold_duration_ms", hold_duration_ms),
+                        hold_handshape=c_data.get("hold_handshape", hold_handshape),
+                        blend_curve=c_data.get("blend_curve", "AHDR_HERMITE")
+                    )
+
+        if not clips_to_stitch:
+            return []
+
+        stitched_clip = self.transition_engine.stitch_clip_sequence(
+            clips_to_stitch,
+            coarticulation_metadata_map=meta_map,
+            default_transition_ms=default_transition_ms,
+            hold_duration_ms=hold_duration_ms,
+            hold_handshape=hold_handshape
+        )
+
+        return [kf.to_dict() for kf in stitched_clip.keyframes]
