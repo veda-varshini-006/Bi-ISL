@@ -33,12 +33,15 @@ import androidx.navigation.compose.rememberNavController
 val DarkBackground = Color(0xFF0B0F19)
 val CardBackground = Color(0xFF121826)
 val PrimaryPurple = Color(0xFF6366F1)
-val SecondaryBlue = Color(0xFF3B82F6)
+val SecondaryBlue = Color(0xFF0284C7)
 val AccentEmerald = Color(0xFF10B981)
 val WarningAmber = Color(0xFFF59E0B)
 val TextMuted = Color(0xFF9CA3AF)
-val SkinTone = Color(0xFFFECDD3)
-val HandJointColor = Color(0xFFF43F5E)
+val SkinTone = Color(0xFFFFE4E6)
+val CapRed = Color(0xFFDC2626)
+val CapYellow = Color(0xFFFBBF24)
+val FingerJointBlue = Color(0xFF38BDF8)
+val FingerTipWhite = Color(0xFFFFFFFF)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,7 +180,7 @@ fun ConversationScreen(navController: NavController) {
                     Icon(Icons.Default.Person, contentDescription = null, tint = SecondaryBlue, modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("English -> Avatar", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
-                    Text("Human Avatar Studio", color = TextMuted, fontSize = 11.sp)
+                    Text("Subway Surfers Avatar", color = TextMuted, fontSize = 11.sp)
                 }
             }
         }
@@ -377,7 +380,7 @@ fun AvatarViewScreen(navController: NavController) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Side-by-Side Text & Animated Human Avatar", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
+        Text("Subway Surfers Style 3D Boy Avatar & Clear 3D Fingers", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
 
         Row(
             modifier = Modifier.fillMaxWidth().weight(1f),
@@ -420,7 +423,7 @@ fun AvatarViewScreen(navController: NavController) {
                 }
             }
 
-            // Right Side: Detailed Animated Human Body Avatar Canvas
+            // Right Side: Subway Surfers Style 3D Boy Avatar Canvas
             Card(
                 modifier = Modifier.weight(1.2f).fillMaxHeight(),
                 colors = CardDefaults.cardColors(containerColor = CardBackground)
@@ -430,35 +433,50 @@ fun AvatarViewScreen(navController: NavController) {
                         val cx = size.width / 2
                         val cy = size.height / 2 + 10
 
-                        // Human Head & Face
+                        // 1. Subway Surfers Boy Head & Face
                         drawCircle(color = SkinTone, radius = 35f, center = Offset(cx, cy - 65))
-                        drawCircle(color = Color(0xFF1E1B4B), radius = 36f, center = Offset(cx, cy - 75)) // Hair
+                        drawCircle(color = CapRed, radius = 36f, center = Offset(cx, cy - 75)) // Cap Red
+                        drawCircle(color = CapYellow, radius = 12f, center = Offset(cx + 25, cy - 80)) // Cap Visor
 
-                        // Eyes & Eyebrows
-                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx - 12, cy - 70))
-                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx + 12, cy - 70))
-                        drawCircle(color = PrimaryPurple, radius = 2.5f, center = Offset(cx - 12, cy - 70))
-                        drawCircle(color = PrimaryPurple, radius = 2.5f, center = Offset(cx + 12, cy - 70))
-                        drawLine(color = Color(0xFF312E81), start = Offset(cx - 18, cy - 78), end = Offset(cx - 6, cy - 78), strokeWidth = 3f)
-                        drawLine(color = Color(0xFF312E81), start = Offset(cx + 6, cy - 78), end = Offset(cx + 18, cy - 78), strokeWidth = 3f)
+                        // Big Expressive Eyes & Pupils
+                        drawCircle(color = Color.White, radius = 6f, center = Offset(cx - 12, cy - 70))
+                        drawCircle(color = Color.White, radius = 6f, center = Offset(cx + 12, cy - 70))
+                        drawCircle(color = SecondaryBlue, radius = 3.5f, center = Offset(cx - 12, cy - 70))
+                        drawCircle(color = SecondaryBlue, radius = 3.5f, center = Offset(cx + 12, cy - 70))
+                        drawCircle(color = Color.White, radius = 1.5f, center = Offset(cx - 10, cy - 72))
 
-                        // Mouth (Mouthings)
-                        drawCircle(color = Color(0xFF9F1239), radius = 6f, center = Offset(cx, cy - 52))
+                        // Denim Jacket & Red Hoodie Collar
+                        drawLine(color = CapRed, start = Offset(cx - 20, cy - 30), end = Offset(cx, cy - 15), strokeWidth = 5f)
+                        drawLine(color = CapRed, start = Offset(cx + 20, cy - 30), end = Offset(cx, cy - 15), strokeWidth = 5f)
+                        drawLine(color = SecondaryBlue, start = Offset(cx - 60, cy - 10), end = Offset(cx + 60, cy - 10), strokeWidth = 24f, cap = StrokeCap.Round)
 
-                        // Neck & Shoulders (Clothing Shirt)
-                        drawLine(color = SkinTone, start = Offset(cx, cy - 30), end = Offset(cx, cy - 10), strokeWidth = 16f)
-                        drawLine(color = PrimaryPurple, start = Offset(cx - 60, cy - 10), end = Offset(cx + 60, cy - 10), strokeWidth = 24f, cap = StrokeCap.Round)
-                        drawLine(color = DarkBackground, start = Offset(cx - 40, cy + 70), end = Offset(cx + 40, cy + 70), strokeWidth = 40f)
-
-                        // Left Arm & Articulated Hand
+                        // Left Arm & Ultra-Clear 3D Finger Joint Nodes
                         drawLine(color = SkinTone, start = Offset(cx - 50, cy - 10), end = Offset(cx - 70, cy + 25), strokeWidth = 12f, cap = StrokeCap.Round)
                         drawLine(color = SkinTone, start = Offset(cx - 70, cy + 25), end = Offset(cx - 30, cy + 20), strokeWidth = 10f, cap = StrokeCap.Round)
-                        drawCircle(color = HandJointColor, radius = 10f, center = Offset(cx - 30, cy + 20)) // Left Hand Palm
+                        
+                        // Left Hand Palm & 5 Articulated Finger Joint Nodes
+                        drawCircle(color = SkinTone, radius = 12f, center = Offset(cx - 30, cy + 20))
+                        for (i in 0..4) {
+                            val fx = (cx - 30) + (i - 2) * 6f
+                            val fy = (cy + 20) - 16f
+                            drawLine(color = SkinTone, start = Offset(cx - 30, cy + 20), end = Offset(fx, fy), strokeWidth = 4f)
+                            drawCircle(color = FingerJointBlue, radius = 3f, center = Offset((cx - 30 + fx) / 2, (cy + 20 + fy) / 2))
+                            drawCircle(color = FingerTipWhite, radius = 3.5f, center = Offset(fx, fy))
+                        }
 
-                        // Right Arm & Articulated Hand (Signing motion)
+                        // Right Arm & Ultra-Clear 3D Finger Joint Nodes (Signing Motion)
                         drawLine(color = SkinTone, start = Offset(cx + 50, cy - 10), end = Offset(cx + 70, cy + 25), strokeWidth = 12f, cap = StrokeCap.Round)
                         drawLine(color = SkinTone, start = Offset(cx + 70, cy + 25), end = Offset(cx + 20, cy + 15), strokeWidth = 10f, cap = StrokeCap.Round)
-                        drawCircle(color = HandJointColor, radius = 10f, center = Offset(cx + 20, cy + 15)) // Right Hand Palm
+
+                        // Right Hand Palm & 5 Articulated Finger Joint Nodes
+                        drawCircle(color = SkinTone, radius = 12f, center = Offset(cx + 20, cy + 15))
+                        for (i in 0..4) {
+                            val fx = (cx + 20) + (i - 2) * 6f
+                            val fy = (cy + 15) - 16f
+                            drawLine(color = SkinTone, start = Offset(cx + 20, cy + 15), end = Offset(fx, fy), strokeWidth = 4f)
+                            drawCircle(color = FingerJointBlue, radius = 3f, center = Offset((cx + 20 + fx) / 2, (cy + 15 + fy) / 2))
+                            drawCircle(color = FingerTipWhite, radius = 3.5f, center = Offset(fx, fy))
+                        }
                     }
 
                     Surface(

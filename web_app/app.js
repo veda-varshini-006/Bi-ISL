@@ -1,4 +1,4 @@
-// Bi-ISL Interactive Web Suite - Realistic Animated Human Body Avatar & Live Sign Engine
+// Bi-ISL Interactive Web Suite - Subway Surfers Style 3D Boy Avatar with Ultra-Clear Animated Fingers
 const BACKEND_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -103,68 +103,104 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // -------------------------------------------------------------
-  // HIGH-FIDELITY ANIMATED HUMAN BODY 3D AVATAR RENDERER
-  // -------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // SUBWAY SURFERS STYLE 3D BOY AVATAR WITH ULTRA-CLEAR ANIMATED FINGERS
+  // -----------------------------------------------------------------------
   const avatarCanvas = document.getElementById("avatarCanvas");
   const actx = avatarCanvas ? avatarCanvas.getContext("2d") : null;
   let isAvatarPlaying = true;
   let signCycleTimer = 0;
 
-  function drawDetailedHand(ctx, wristX, wristY, angle, isLeft, handShape = "OPEN") {
+  /**
+   * Draws enlarged, ultra-clear 3D articulated fingers for Subway Surfers Boy
+   */
+  function drawClearSubwaySurfersHand(ctx, wristX, wristY, angle, handShape = "OPEN") {
     ctx.save();
     ctx.translate(wristX, wristY);
     ctx.rotate(angle);
 
-    // Palm Gradient
-    const palmGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 16);
-    palmGrad.addColorStop(0, "#fbcfe8");
-    palmGrad.addColorStop(1, "#f43f5e");
+    // Glowing Palm Outline for maximum visibility
+    ctx.shadowColor = "#38bdf8";
+    ctx.shadowBlur = 12;
+
+    // Palm Base (Skin Gradient)
+    const palmGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, 22);
+    palmGrad.addColorStop(0, "#ffe4e6");
+    palmGrad.addColorStop(0.7, "#fb7185");
+    palmGrad.addColorStop(1, "#e11d48");
 
     ctx.fillStyle = palmGrad;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 14, 18, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 18, 24, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 5 Fingers (Thumb, Index, Middle, Ring, Pinky)
-    const fingerColors = ["#fecdd3", "#fda4af", "#f43f5e", "#e11d48", "#be123c"];
+    // Reset Shadow for sharp finger joints
+    ctx.shadowBlur = 0;
+
+    // 5 Distinct Segmented Fingers (Thumb, Index, Middle, Ring, Pinky)
+    const fingerLengths = [22, 34, 38, 35, 28];
+    const fingerAngles = [-0.65, -0.28, 0, 0.28, 0.58];
+    const fingerNames = ["Thumb", "Index", "Middle", "Ring", "Pinky"];
+
     for (let i = 0; i < 5; i++) {
-      let fingerAngle = (i - 2) * 0.28;
-      let length = i === 0 ? 16 : (i === 2 ? 24 : 22);
-      if (handShape === "POINT" && i !== 1) length = 8; // Fold non-index fingers
-      if (handShape === "FIST") length = 10;
+      let fLen = fingerLengths[i];
+      let fAngle = fingerAngles[i];
 
-      let fx = Math.sin(fingerAngle) * length;
-      let fy = -Math.cos(fingerAngle) * length;
+      // Handshape Adjustments for ISL Signs
+      if (handShape === "POINT" && i !== 1) fLen = 14; // Fold non-index fingers
+      if (handShape === "FIST") fLen = 16;
+      if (handShape === "PULSE" && i > 1) fLen = 15;
 
-      ctx.strokeStyle = fingerColors[i];
-      ctx.lineWidth = 4;
+      const seg1X = Math.sin(fAngle) * (fLen * 0.5);
+      const seg1Y = -Math.cos(fAngle) * (fLen * 0.5);
+
+      const tipX = Math.sin(fAngle) * fLen;
+      const tipY = -Math.cos(fAngle) * fLen;
+
+      // Proximal Joint Segment (Base -> Knuckle)
+      ctx.strokeStyle = "#f43f5e";
+      ctx.lineWidth = 6;
       ctx.lineCap = "round";
 
       ctx.beginPath();
-      ctx.moveTo(0, -6);
-      ctx.lineTo(fx, fy);
+      ctx.moveTo(0, -8);
+      ctx.lineTo(seg1X, seg1Y);
       ctx.stroke();
 
-      // Fingertip joint node
-      ctx.fillStyle = "#fff";
+      // Distal Joint Segment (Knuckle -> Tip)
+      ctx.strokeStyle = "#ffe4e6";
+      ctx.lineWidth = 5;
+
       ctx.beginPath();
-      ctx.arc(fx, fy, 2, 0, Math.PI * 2);
+      ctx.moveTo(seg1X, seg1Y);
+      ctx.lineTo(tipX, tipY);
+      ctx.stroke();
+
+      // Knuckle Joint Ring (Bright Highlight)
+      ctx.fillStyle = "#38bdf8";
+      ctx.beginPath();
+      ctx.arc(seg1X, seg1Y, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Fingertip Node (Fingernail Glow)
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 3.5, 0, Math.PI * 2);
       ctx.fill();
     }
 
     ctx.restore();
   }
 
-  function renderAnimatedHumanAvatar() {
+  function renderSubwaySurfersBoyAvatar() {
     if (!actx) return;
     actx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
 
     const time = Date.now() * 0.003;
     const cx = avatarCanvas.width / 2;
-    const cy = avatarCanvas.height / 2 + 20;
+    const cy = avatarCanvas.height / 2 + 15;
 
-    // Cycle through active gloss sequence
+    // Cycle Gloss Sequence
     signCycleTimer++;
     if (signCycleTimer % 100 === 0 && activeGlosses.length > 0) {
       currentGlossIndex = (currentGlossIndex + 1) % activeGlosses.length;
@@ -175,163 +211,173 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const currentGloss = activeGlosses[currentGlossIndex] || "DOCTOR";
 
-    // Dynamic Breathing & Body Sway
-    const breatheY = Math.sin(time * 1.5) * 3;
-    const swayX = Math.cos(time * 0.8) * 2;
+    // Subway Surfers Energetic Bounce Motion
+    const bounceY = Math.sin(time * 3) * 4;
+    const swayX = Math.cos(time * 1.5) * 3;
 
-    // 1. BACKGROUND ENVIRONMENT GRADIENT
-    const bgGrad = actx.createRadialGradient(cx, cy - 80, 50, cx, cy, 300);
+    // 1. STYLIZED SUBWAY SURFERS ENVIRONMENT
+    const bgGrad = actx.createRadialGradient(cx, cy - 80, 40, cx, cy, 320);
     bgGrad.addColorStop(0, "#1e1b4b");
-    bgGrad.addColorStop(1, "#090d16");
+    bgGrad.addColorStop(0.6, "#0f172a");
+    bgGrad.addColorStop(1, "#020617");
     actx.fillStyle = bgGrad;
     actx.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
 
-    // 2. HUMAN TORSO & CLOTHING (Shirt & Shoulders)
-    const shoulderY = cy - 20 + breatheY;
-    const shoulderL_X = cx - 85 + swayX;
-    const shoulderR_X = cx + 85 + swayX;
+    // 2. SUBWAY BOY TORSO & DENIM JACKET / HOODIE
+    const shoulderY = cy - 25 + bounceY;
+    const shoulderL_X = cx - 90 + swayX;
+    const shoulderR_X = cx + 90 + swayX;
 
-    // Torso Gradient (High Quality Suit/Shirt Shading)
-    const torsoGrad = actx.createLinearGradient(cx - 70, shoulderY, cx + 70, cy + 140);
-    torsoGrad.addColorStop(0, "#312e81");
-    torsoGrad.addColorStop(0.5, "#1e1b4b");
-    torsoGrad.addColorStop(1, "#0f172a");
+    // Denim Jacket Body
+    const jacketGrad = actx.createLinearGradient(cx - 75, shoulderY, cx + 75, cy + 140);
+    jacketGrad.addColorStop(0, "#0284c7"); // Subway Surfers Blue Denim
+    jacketGrad.addColorStop(0.5, "#0369a1");
+    jacketGrad.addColorStop(1, "#0f172a");
 
-    actx.fillStyle = torsoGrad;
+    actx.fillStyle = jacketGrad;
     actx.beginPath();
     actx.moveTo(shoulderL_X, shoulderY);
     actx.lineTo(shoulderR_X, shoulderY);
-    actx.lineTo(cx + 65, cy + 140);
-    actx.lineTo(cx - 65, cy + 140);
+    actx.lineTo(cx + 70, cy + 140);
+    actx.lineTo(cx - 70, cy + 140);
     actx.closePath();
     actx.fill();
 
-    // Collar & V-Neck
-    actx.strokeStyle = "#818cf8";
-    actx.lineWidth = 3;
+    // Red Hoodie Collar & Zipper
+    actx.strokeStyle = "#ef4444"; // Red accent
+    actx.lineWidth = 5;
     actx.beginPath();
-    actx.moveTo(shoulderL_X + 25, shoulderY);
-    actx.lineTo(cx, shoulderY + 35);
-    actx.lineTo(shoulderR_X - 25, shoulderY);
+    actx.moveTo(cx - 25, shoulderY);
+    actx.lineTo(cx, shoulderY + 45);
+    actx.lineTo(cx + 25, shoulderY);
     actx.stroke();
 
-    // 3. HUMAN NECK & HEAD (Skin Tones & Shading)
-    const headX = cx + swayX;
-    const headY = cy - 110 + breatheY;
-
-    // Neck
-    const skinGrad = actx.createLinearGradient(headX - 15, headY, headX + 15, shoulderY);
-    skinGrad.addColorStop(0, "#fecdd3");
-    skinGrad.addColorStop(1, "#fda4af");
-
-    actx.fillStyle = skinGrad;
-    actx.fillRect(headX - 14, headY + 30, 28, 25);
-
-    // Head Oval
-    actx.fillStyle = skinGrad;
-    actx.beginPath();
-    actx.ellipse(headX, headY, 44, 52, 0, 0, Math.PI * 2);
-    actx.fill();
-    actx.strokeStyle = "#e11d48";
-    actx.lineWidth = 1.5;
-    actx.stroke();
-
-    // Hair
-    actx.fillStyle = "#1e1b4b";
-    actx.beginPath();
-    actx.arc(headX, headY - 15, 46, Math.PI, Math.PI * 2);
-    actx.fill();
-
-    // Eyes (with Natural Blinking Animation)
-    const blink = Math.sin(time * 0.5) > 0.96 ? 0.1 : 1;
-    actx.fillStyle = "#fff";
-    actx.beginPath(); actx.ellipse(headX - 16, headY - 8, 8, 6 * blink, 0, 0, Math.PI * 2); actx.fill();
-    actx.beginPath(); actx.ellipse(headX + 16, headY - 8, 8, 6 * blink, 0, 0, Math.PI * 2); actx.fill();
-
-    // Pupils
-    actx.fillStyle = "#312e81";
-    actx.beginPath(); actx.arc(headX - 16, headY - 8, 3.5 * blink, 0, Math.PI * 2); actx.fill();
-    actx.beginPath(); actx.arc(headX + 16, headY - 8, 3.5 * blink, 0, Math.PI * 2); actx.fill();
-
-    // Eyebrows (Dynamic Non-Manual Marker NMM: Raised or Normal)
-    const browYOffset = activeNMM.eyebrows === "RAISED" ? -14 : -10;
-    actx.strokeStyle = "#312e81";
-    actx.lineWidth = 3.5;
-    actx.beginPath();
-    actx.moveTo(headX - 24, headY + browYOffset);
-    actx.lineTo(headX - 8, headY + browYOffset - 1);
-    actx.moveTo(headX + 8, headY + browYOffset - 1);
-    actx.lineTo(headX + 24, headY + browYOffset);
-    actx.stroke();
-
-    // Nose
-    actx.strokeStyle = "#fb7185";
+    // Zipper line
+    actx.strokeStyle = "#fbbf24";
     actx.lineWidth = 2;
     actx.beginPath();
-    actx.moveTo(headX, headY - 4);
-    actx.lineTo(headX - 3, headY + 10);
-    actx.lineTo(headX + 4, headY + 10);
+    actx.moveTo(cx, shoulderY + 45);
+    actx.lineTo(cx, cy + 140);
     actx.stroke();
 
-    // Mouth / Mouthings (Mouth articulates according to active ISL gloss)
-    const mouthOpen = 4 + Math.sin(time * 6) * 3;
-    actx.fillStyle = "#9f1239";
+    // 3. SUBWAY SURFERS BOY HEAD & BACKWARD CAP (Jake Style)
+    const headX = cx + swayX;
+    const headY = cy - 115 + bounceY;
+
+    // Neck
+    actx.fillStyle = "#ffe4e6";
+    actx.fillRect(headX - 16, headY + 32, 32, 25);
+
+    // Face Oval
+    actx.fillStyle = "#ffe4e6";
     actx.beginPath();
-    actx.ellipse(headX, headY + 24, 12, mouthOpen, 0, 0, Math.PI * 2);
+    actx.ellipse(headX, headY, 46, 54, 0, 0, Math.PI * 2);
+    actx.fill();
+    actx.strokeStyle = "#fb7185";
+    actx.lineWidth = 2;
+    actx.stroke();
+
+    // Backward Cap (Subway Surfers Iconic Red/Yellow Cap)
+    actx.fillStyle = "#dc2626"; // Cap Red
+    actx.beginPath();
+    actx.arc(headX, headY - 12, 49, Math.PI, Math.PI * 2);
     actx.fill();
 
-    // 4. SIGN LANGUAGE ARM KINEMATICS & HAND MOTIONS
-    // Mapped positions for specific ISL signs:
-    let armLeftTarget = { elbow: { x: cx - 110, y: cy + 30 }, wrist: { x: cx - 70, y: cy + 10 }, handShape: "OPEN" };
-    let armRightTarget = { elbow: { x: cx + 110, y: cy + 30 }, wrist: { x: cx + 70, y: cy + 10 }, handShape: "OPEN" };
+    // Cap Visor (Pointing Backward)
+    actx.fillStyle = "#fbbf24"; // Cap Yellow Visor
+    actx.beginPath();
+    actx.ellipse(headX + 25, headY - 18, 30, 8, 0.2, 0, Math.PI * 2);
+    actx.fill();
+
+    // Cool Hair Tuft under Cap
+    actx.fillStyle = "#f59e0b";
+    actx.beginPath();
+    actx.arc(headX - 25, headY - 22, 12, 0, Math.PI * 2);
+    actx.fill();
+
+    // Eyes (Subway Surfers Big Expressive Anime Eyes)
+    const blink = Math.sin(time * 0.4) > 0.95 ? 0.1 : 1;
+    actx.fillStyle = "#ffffff";
+    actx.beginPath(); actx.ellipse(headX - 18, headY - 6, 10, 8 * blink, 0, 0, Math.PI * 2); actx.fill();
+    actx.beginPath(); actx.ellipse(headX + 18, headY - 6, 10, 8 * blink, 0, 0, Math.PI * 2); actx.fill();
+
+    // Blue Pupils with Catchlight Highlights
+    actx.fillStyle = "#0284c7";
+    actx.beginPath(); actx.arc(headX - 18, headY - 6, 5 * blink, 0, Math.PI * 2); actx.fill();
+    actx.beginPath(); actx.arc(headX + 18, headY - 6, 5 * blink, 0, Math.PI * 2); actx.fill();
+
+    actx.fillStyle = "#ffffff";
+    actx.beginPath(); actx.arc(headX - 16, headY - 8, 2 * blink, 0, Math.PI * 2); actx.fill();
+    actx.beginPath(); actx.arc(headX + 20, headY - 8, 2 * blink, 0, Math.PI * 2); actx.fill();
+
+    // Eyebrows (Dynamic NMM)
+    const browY = activeNMM.eyebrows === "RAISED" ? -18 : -14;
+    actx.strokeStyle = "#92400e";
+    actx.lineWidth = 4;
+    actx.beginPath();
+    actx.moveTo(headX - 28, headY + browY);
+    actx.lineTo(headX - 8, headY + browY - 2);
+    actx.moveTo(headX + 8, headY + browY - 2);
+    actx.lineTo(headX + 28, headY + browY);
+    actx.stroke();
+
+    // Cool Smile
+    actx.strokeStyle = "#e11d48";
+    actx.lineWidth = 3;
+    actx.beginPath();
+    actx.arc(headX, headY + 16, 14, 0.1, Math.PI - 0.1);
+    actx.stroke();
+
+    // 4. ISL SIGN LANGUAGE HAND KINEMATICS & ULTRA-CLEAR 3D FINGERS
+    let armLeft = { elbow: { x: cx - 110, y: cy + 30 }, wrist: { x: cx - 70, y: cy + 10 }, handShape: "OPEN" };
+    let armRight = { elbow: { x: cx + 110, y: cy + 30 }, wrist: { x: cx + 70, y: cy + 10 }, handShape: "OPEN" };
 
     if (currentGloss === "DOCTOR") {
-      // Doctor sign: Right hand taps left wrist (pulse check)
-      armLeftTarget = { elbow: { x: cx - 90, y: cy + 40 }, wrist: { x: cx - 30, y: cy + 30 }, handShape: "OPEN" };
-      armRightTarget = { elbow: { x: cx + 60, y: cy + 50 }, wrist: { x: cx - 25 + Math.sin(time * 8) * 8, y: cy + 25 }, handShape: "POINT" };
+      armLeft = { elbow: { x: cx - 95, y: cy + 45 }, wrist: { x: cx - 35, y: cy + 35 }, handShape: "OPEN" };
+      armRight = { elbow: { x: cx + 65, y: cy + 55 }, wrist: { x: cx - 30 + Math.sin(time * 8) * 10, y: cy + 30 }, handShape: "POINT" };
     } else if (currentGloss === "TRAIN") {
-      // Train sign: Two hands parallel sliding forward/back
-      armLeftTarget = { elbow: { x: cx - 75, y: cy + 40 }, wrist: { x: cx - 25, y: cy + 20 + Math.sin(time * 6) * 15 }, handShape: "POINT" };
-      armRightTarget = { elbow: { x: cx + 75, y: cy + 40 }, wrist: { x: cx + 25, y: cy + 20 - Math.sin(time * 6) * 15 }, handShape: "POINT" };
+      armLeft = { elbow: { x: cx - 80, y: cy + 45 }, wrist: { x: cx - 30, y: cy + 20 + Math.sin(time * 6) * 18 }, handShape: "POINT" };
+      armRight = { elbow: { x: cx + 80, y: cy + 45 }, wrist: { x: cx + 30, y: cy + 20 - Math.sin(time * 6) * 18 }, handShape: "POINT" };
     } else if (currentGloss === "STATION" || currentGloss === "HOME") {
-      // Station/Home: Hands forming roof shape in front of chest
-      armLeftTarget = { elbow: { x: cx - 90, y: cy + 30 }, wrist: { x: cx - 15, y: cy - 20 }, handShape: "OPEN" };
-      armRightTarget = { elbow: { x: cx + 90, y: cy + 30 }, wrist: { x: cx + 15, y: cy - 20 }, handShape: "OPEN" };
+      armLeft = { elbow: { x: cx - 95, y: cy + 35 }, wrist: { x: cx - 20, y: cy - 25 }, handShape: "OPEN" };
+      armRight = { elbow: { x: cx + 95, y: cy + 35 }, wrist: { x: cx + 20, y: cy - 25 }, handShape: "OPEN" };
     } else if (currentGloss === "GO" || currentGloss === "TOMORROW") {
-      // Go/Tomorrow: Sweeping arm pointing outward
-      armLeftTarget = { elbow: { x: cx - 100, y: cy + 40 }, wrist: { x: cx - 60, y: cy + 20 }, handShape: "OPEN" };
-      armRightTarget = { elbow: { x: cx + 100, y: cy + 20 }, wrist: { x: cx + 80 + Math.sin(time * 4) * 20, y: cy - 30 }, handShape: "POINT" };
+      armLeft = { elbow: { x: cx - 105, y: cy + 45 }, wrist: { x: cx - 65, y: cy + 25 }, handShape: "OPEN" };
+      armRight = { elbow: { x: cx + 105, y: cy + 25 }, wrist: { x: cx + 85 + Math.sin(time * 4) * 25, y: cy - 35 }, handShape: "POINT" };
     }
 
-    // Draw Left Arm & Hand
-    actx.strokeStyle = skinGrad;
-    actx.lineWidth = 14;
+    // Draw Denim Sleeves & Arms
+    actx.strokeStyle = "#ffe4e6";
+    actx.lineWidth = 16;
     actx.lineCap = "round";
     actx.lineJoin = "round";
 
+    // Left Arm
     actx.beginPath();
     actx.moveTo(shoulderL_X, shoulderY);
-    actx.lineTo(armLeftTarget.elbow.x, armLeftTarget.elbow.y);
-    actx.lineTo(armLeftTarget.wrist.x, armLeftTarget.wrist.y);
+    actx.lineTo(armLeft.elbow.x, armLeft.elbow.y);
+    actx.lineTo(armLeft.wrist.x, armLeft.wrist.y);
     actx.stroke();
 
-    drawDetailedHand(actx, armLeftTarget.wrist.x, armLeftTarget.wrist.y, -0.4, true, armLeftTarget.handShape);
+    // Draw Enlarged Clear 3D Fingers on Left Hand
+    drawClearSubwaySurfersHand(actx, armLeft.wrist.x, armLeft.wrist.y, -0.4, armLeft.handShape);
 
-    // Draw Right Arm & Hand
+    // Right Arm
     actx.beginPath();
     actx.moveTo(shoulderR_X, shoulderY);
-    actx.lineTo(armRightTarget.elbow.x, armRightTarget.elbow.y);
-    actx.lineTo(armRightTarget.wrist.x, armRightTarget.wrist.y);
+    actx.lineTo(armRight.elbow.x, armRight.elbow.y);
+    actx.lineTo(armRight.wrist.x, armRight.wrist.y);
     actx.stroke();
 
-    drawDetailedHand(actx, armRightTarget.wrist.x, armRightTarget.wrist.y, 0.4, false, armRightTarget.handShape);
+    // Draw Enlarged Clear 3D Fingers on Right Hand
+    drawClearSubwaySurfersHand(actx, armRight.wrist.x, armRight.wrist.y, 0.4, armRight.handShape);
 
     if (isAvatarPlaying) {
-      requestAnimationFrame(renderAnimatedHumanAvatar);
+      requestAnimationFrame(renderSubwaySurfersBoyAvatar);
     }
   }
 
-  renderAnimatedHumanAvatar();
+  renderSubwaySurfersBoyAvatar();
 
   // Play/Pause Avatar Controls
   const btnPlayAvatar = document.getElementById("btnPlayAvatar");
@@ -341,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnPlayAvatar.addEventListener("click", () => {
       if (!isAvatarPlaying) {
         isAvatarPlaying = true;
-        renderAnimatedHumanAvatar();
+        renderSubwaySurfersBoyAvatar();
       }
     });
     btnPauseAvatar.addEventListener("click", () => {
@@ -539,7 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
           agentBubble.innerHTML = `
             <div class="bubble-meta">Backend Synthesized ISL Representation</div>
             <div class="bubble-content">Glosses: [${data.isl_gloss_sequence.join(" ")}]</div>
-            <div class="bubble-trans">Animated Human Body Avatar rendering sign language live.</div>
+            <div class="bubble-trans">Subway Surfers 3D Boy Avatar performing sign language live.</div>
           `;
           chatHistory.appendChild(agentBubble);
 
