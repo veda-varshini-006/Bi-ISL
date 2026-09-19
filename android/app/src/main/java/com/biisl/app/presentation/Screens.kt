@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,10 +16,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,6 +37,8 @@ val SecondaryBlue = Color(0xFF3B82F6)
 val AccentEmerald = Color(0xFF10B981)
 val WarningAmber = Color(0xFFF59E0B)
 val TextMuted = Color(0xFF9CA3AF)
+val SkinTone = Color(0xFFFECDD3)
+val HandJointColor = Color(0xFFF43F5E)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +131,6 @@ fun ConversationScreen(navController: NavController) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Status Banner
         Card(
             colors = CardDefaults.cardColors(containerColor = CardBackground),
             modifier = Modifier.fillMaxWidth()
@@ -153,7 +152,6 @@ fun ConversationScreen(navController: NavController) {
             }
         }
 
-        // Quick Navigation Tiles
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Card(
                 modifier = Modifier
@@ -179,12 +177,11 @@ fun ConversationScreen(navController: NavController) {
                     Icon(Icons.Default.Person, contentDescription = null, tint = SecondaryBlue, modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("English -> Avatar", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
-                    Text("Side-by-Side Sign Studio", color = TextMuted, fontSize = 11.sp)
+                    Text("Human Avatar Studio", color = TextMuted, fontSize = 11.sp)
                 }
             }
         }
 
-        // Live SBDS Inspector Box
         Card(
             colors = CardDefaults.cardColors(containerColor = CardBackground),
             modifier = Modifier.fillMaxWidth().weight(1f)
@@ -261,7 +258,6 @@ fun CameraScreen(navController: NavController) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // CameraX Preview View
         androidx.compose.ui.viewinterop.AndroidView(
             factory = { ctx ->
                 androidx.camera.view.PreviewView(ctx).apply {
@@ -272,22 +268,18 @@ fun CameraScreen(navController: NavController) {
             modifier = Modifier.fillMaxSize()
         )
 
-        // Overlay: Simulated MediaPipe Landmarks Canvas
         Canvas(modifier = Modifier.fillMaxSize()) {
             val cx = size.width / 2
             val cy = size.height / 2
 
-            // Draw Hand points
             drawCircle(color = AccentEmerald, radius = 8f, center = Offset(cx - 100, cy + 50))
             drawCircle(color = AccentEmerald, radius = 8f, center = Offset(cx + 100, cy + 50))
             drawLine(color = AccentEmerald, start = Offset(cx - 100, cy + 50), end = Offset(cx + 100, cy + 50), strokeWidth = 3f)
 
-            // Draw Pose skeleton
             drawLine(color = SecondaryBlue, start = Offset(cx, cy - 100), end = Offset(cx, cy + 150), strokeWidth = 4f)
             drawCircle(color = PrimaryPurple, radius = 30f, center = Offset(cx, cy - 120))
         }
 
-        // Overlay Telemetry Top Bar
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -313,7 +305,6 @@ fun CameraScreen(navController: NavController) {
             }
         }
 
-        // Bottom Result Card
         Card(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -386,14 +377,13 @@ fun AvatarViewScreen(navController: NavController) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Side-by-Side English & 3D ISL Avatar", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
+        Text("Side-by-Side Text & Animated Human Avatar", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
 
-        // Side-by-Side Layout Row
         Row(
             modifier = Modifier.fillMaxWidth().weight(1f),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Left Side: Text Input & Synthesized Glosses
+            // Left Side: Text Input
             Card(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 colors = CardDefaults.cardColors(containerColor = CardBackground)
@@ -414,7 +404,7 @@ fun AvatarViewScreen(navController: NavController) {
 
                     Text("Synthesized Glosses:", color = TextMuted, fontSize = 11.sp)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        currentGlosses.take(4).forEach { g ->
+                        currentGlosses.take(3).forEach { g ->
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = PrimaryPurple.copy(alpha = 0.2f),
@@ -430,32 +420,45 @@ fun AvatarViewScreen(navController: NavController) {
                 }
             }
 
-            // Right Side: Live 3D Avatar Rendering Canvas (Beside Text!)
+            // Right Side: Detailed Animated Human Body Avatar Canvas
             Card(
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+                modifier = Modifier.weight(1.2f).fillMaxHeight(),
                 colors = CardDefaults.cardColors(containerColor = CardBackground)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         val cx = size.width / 2
-                        val cy = size.height / 2
+                        val cy = size.height / 2 + 10
 
-                        // Head
-                        drawCircle(color = PrimaryPurple, radius = 40f, center = Offset(cx, cy - 50))
-                        
-                        // Eyes
-                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx - 15, cy - 60))
-                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx + 15, cy - 60))
+                        // Human Head & Face
+                        drawCircle(color = SkinTone, radius = 35f, center = Offset(cx, cy - 65))
+                        drawCircle(color = Color(0xFF1E1B4B), radius = 36f, center = Offset(cx, cy - 75)) // Hair
 
-                        // Torso
-                        drawLine(color = SecondaryBlue, start = Offset(cx - 40, cy + 50), end = Offset(cx + 40, cy + 50), strokeWidth = 6f)
-                        drawLine(color = SecondaryBlue, start = Offset(cx, cy - 10), end = Offset(cx, cy + 50), strokeWidth = 8f)
+                        // Eyes & Eyebrows
+                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx - 12, cy - 70))
+                        drawCircle(color = Color.White, radius = 5f, center = Offset(cx + 12, cy - 70))
+                        drawCircle(color = PrimaryPurple, radius = 2.5f, center = Offset(cx - 12, cy - 70))
+                        drawCircle(color = PrimaryPurple, radius = 2.5f, center = Offset(cx + 12, cy - 70))
+                        drawLine(color = Color(0xFF312E81), start = Offset(cx - 18, cy - 78), end = Offset(cx - 6, cy - 78), strokeWidth = 3f)
+                        drawLine(color = Color(0xFF312E81), start = Offset(cx + 6, cy - 78), end = Offset(cx + 18, cy - 78), strokeWidth = 3f)
 
-                        // Signing Arms
-                        drawLine(color = AccentEmerald, start = Offset(cx - 30, cy), end = Offset(cx - 60, cy + 30), strokeWidth = 6f)
-                        drawLine(color = AccentEmerald, start = Offset(cx + 30, cy), end = Offset(cx + 60, cy + 30), strokeWidth = 6f)
-                        drawCircle(color = AccentEmerald, radius = 10f, center = Offset(cx - 60, cy + 30))
-                        drawCircle(color = AccentEmerald, radius = 10f, center = Offset(cx + 60, cy + 30))
+                        // Mouth (Mouthings)
+                        drawCircle(color = Color(0xFF9F1239), radius = 6f, center = Offset(cx, cy - 52))
+
+                        // Neck & Shoulders (Clothing Shirt)
+                        drawLine(color = SkinTone, start = Offset(cx, cy - 30), end = Offset(cx, cy - 10), strokeWidth = 16f)
+                        drawLine(color = PrimaryPurple, start = Offset(cx - 60, cy - 10), end = Offset(cx + 60, cy - 10), strokeWidth = 24f, cap = StrokeCap.Round)
+                        drawLine(color = DarkBackground, start = Offset(cx - 40, cy + 70), end = Offset(cx + 40, cy + 70), strokeWidth = 40f)
+
+                        // Left Arm & Articulated Hand
+                        drawLine(color = SkinTone, start = Offset(cx - 50, cy - 10), end = Offset(cx - 70, cy + 25), strokeWidth = 12f, cap = StrokeCap.Round)
+                        drawLine(color = SkinTone, start = Offset(cx - 70, cy + 25), end = Offset(cx - 30, cy + 20), strokeWidth = 10f, cap = StrokeCap.Round)
+                        drawCircle(color = HandJointColor, radius = 10f, center = Offset(cx - 30, cy + 20)) // Left Hand Palm
+
+                        // Right Arm & Articulated Hand (Signing motion)
+                        drawLine(color = SkinTone, start = Offset(cx + 50, cy - 10), end = Offset(cx + 70, cy + 25), strokeWidth = 12f, cap = StrokeCap.Round)
+                        drawLine(color = SkinTone, start = Offset(cx + 70, cy + 25), end = Offset(cx + 20, cy + 15), strokeWidth = 10f, cap = StrokeCap.Round)
+                        drawCircle(color = HandJointColor, radius = 10f, center = Offset(cx + 20, cy + 15)) // Right Hand Palm
                     }
 
                     Surface(
@@ -464,7 +467,7 @@ fun AvatarViewScreen(navController: NavController) {
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            "Signing: [${currentGlosses.firstOrNull() ?: "READY"}]",
+                            "Signing: [${currentGlosses.firstOrNull() ?: "DOCTOR"}]",
                             color = AccentEmerald,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,

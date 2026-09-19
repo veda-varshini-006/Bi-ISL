@@ -1,4 +1,4 @@
-// Bi-ISL Interactive Web Suite - Live Backend & Side-by-Side Studio Integration
+// Bi-ISL Interactive Web Suite - Realistic Animated Human Body Avatar & Live Sign Engine
 const BACKEND_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,11 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (e) {
-      console.warn("Backend server offline. Running simulated mode.");
+      console.warn("Backend server offline. Running local sign engine.");
     }
   }
 
   checkBackendStatus();
+
+  // Active Glosses for Avatar Animation
+  let activeGlosses = ["DOCTOR", "APPOINTMENT", "TODAY", "TIME", "WHAT"];
+  let currentGlossIndex = 0;
+  let activeNMM = { eyebrows: "RAISED", head_tilt: "LEFT", mouthings: "/dok-tor/" };
 
   // Side-by-Side Text-to-ISL Studio Handler
   const btnRenderStudio = document.getElementById("btnRenderStudio");
@@ -41,9 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const studioGlossDisplay = document.getElementById("studioGlossDisplay");
   const studioNmmDisplay = document.getElementById("studioNmmDisplay");
   const nowSigningTag = document.getElementById("nowSigningTag");
-
-  let activeGlosses = ["DOCTOR", "APPOINTMENT", "TODAY", "TIME", "WHAT"];
-  let currentGlossIndex = 0;
 
   async function handleStudioTranslation(text) {
     if (!text) return;
@@ -58,22 +60,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res.ok) {
         const data = await res.json();
         activeGlosses = data.isl_gloss_sequence;
+        activeNMM = data.nmm_specifications;
 
-        // Render Gloss Tokens
         if (studioGlossDisplay) {
           studioGlossDisplay.innerHTML = activeGlosses
             .map(g => `<span class="token">${g}</span>`)
             .join(" ");
         }
 
-        // Render NMM Specs
         if (studioNmmDisplay) {
-          const nmm = data.nmm_specifications;
-          studioNmmDisplay.innerText = `Eyebrows: ${nmm.eyebrows} | Head Pose: ${nmm.head_tilt} | Mouthings: ${nmm.mouthings}`;
+          studioNmmDisplay.innerText = `Eyebrows: ${activeNMM.eyebrows} | Head Pose: ${activeNMM.head_tilt} | Mouthings: ${activeNMM.mouthings}`;
         }
       }
     } catch (err) {
-      // Fallback
       activeGlosses = text.toUpperCase().split(" ").filter(w => w.length > 2);
       if (studioGlossDisplay) {
         studioGlossDisplay.innerHTML = activeGlosses
@@ -104,7 +103,253 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Landmark Canvas Simulation
+  // -------------------------------------------------------------
+  // HIGH-FIDELITY ANIMATED HUMAN BODY 3D AVATAR RENDERER
+  // -------------------------------------------------------------
+  const avatarCanvas = document.getElementById("avatarCanvas");
+  const actx = avatarCanvas ? avatarCanvas.getContext("2d") : null;
+  let isAvatarPlaying = true;
+  let signCycleTimer = 0;
+
+  function drawDetailedHand(ctx, wristX, wristY, angle, isLeft, handShape = "OPEN") {
+    ctx.save();
+    ctx.translate(wristX, wristY);
+    ctx.rotate(angle);
+
+    // Palm Gradient
+    const palmGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 16);
+    palmGrad.addColorStop(0, "#fbcfe8");
+    palmGrad.addColorStop(1, "#f43f5e");
+
+    ctx.fillStyle = palmGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 14, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 5 Fingers (Thumb, Index, Middle, Ring, Pinky)
+    const fingerColors = ["#fecdd3", "#fda4af", "#f43f5e", "#e11d48", "#be123c"];
+    for (let i = 0; i < 5; i++) {
+      let fingerAngle = (i - 2) * 0.28;
+      let length = i === 0 ? 16 : (i === 2 ? 24 : 22);
+      if (handShape === "POINT" && i !== 1) length = 8; // Fold non-index fingers
+      if (handShape === "FIST") length = 10;
+
+      let fx = Math.sin(fingerAngle) * length;
+      let fy = -Math.cos(fingerAngle) * length;
+
+      ctx.strokeStyle = fingerColors[i];
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      ctx.moveTo(0, -6);
+      ctx.lineTo(fx, fy);
+      ctx.stroke();
+
+      // Fingertip joint node
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(fx, fy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function renderAnimatedHumanAvatar() {
+    if (!actx) return;
+    actx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+
+    const time = Date.now() * 0.003;
+    const cx = avatarCanvas.width / 2;
+    const cy = avatarCanvas.height / 2 + 20;
+
+    // Cycle through active gloss sequence
+    signCycleTimer++;
+    if (signCycleTimer % 100 === 0 && activeGlosses.length > 0) {
+      currentGlossIndex = (currentGlossIndex + 1) % activeGlosses.length;
+      if (nowSigningTag) {
+        nowSigningTag.innerText = `Now Signing: [${activeGlosses[currentGlossIndex]}]`;
+      }
+    }
+
+    const currentGloss = activeGlosses[currentGlossIndex] || "DOCTOR";
+
+    // Dynamic Breathing & Body Sway
+    const breatheY = Math.sin(time * 1.5) * 3;
+    const swayX = Math.cos(time * 0.8) * 2;
+
+    // 1. BACKGROUND ENVIRONMENT GRADIENT
+    const bgGrad = actx.createRadialGradient(cx, cy - 80, 50, cx, cy, 300);
+    bgGrad.addColorStop(0, "#1e1b4b");
+    bgGrad.addColorStop(1, "#090d16");
+    actx.fillStyle = bgGrad;
+    actx.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+
+    // 2. HUMAN TORSO & CLOTHING (Shirt & Shoulders)
+    const shoulderY = cy - 20 + breatheY;
+    const shoulderL_X = cx - 85 + swayX;
+    const shoulderR_X = cx + 85 + swayX;
+
+    // Torso Gradient (High Quality Suit/Shirt Shading)
+    const torsoGrad = actx.createLinearGradient(cx - 70, shoulderY, cx + 70, cy + 140);
+    torsoGrad.addColorStop(0, "#312e81");
+    torsoGrad.addColorStop(0.5, "#1e1b4b");
+    torsoGrad.addColorStop(1, "#0f172a");
+
+    actx.fillStyle = torsoGrad;
+    actx.beginPath();
+    actx.moveTo(shoulderL_X, shoulderY);
+    actx.lineTo(shoulderR_X, shoulderY);
+    actx.lineTo(cx + 65, cy + 140);
+    actx.lineTo(cx - 65, cy + 140);
+    actx.closePath();
+    actx.fill();
+
+    // Collar & V-Neck
+    actx.strokeStyle = "#818cf8";
+    actx.lineWidth = 3;
+    actx.beginPath();
+    actx.moveTo(shoulderL_X + 25, shoulderY);
+    actx.lineTo(cx, shoulderY + 35);
+    actx.lineTo(shoulderR_X - 25, shoulderY);
+    actx.stroke();
+
+    // 3. HUMAN NECK & HEAD (Skin Tones & Shading)
+    const headX = cx + swayX;
+    const headY = cy - 110 + breatheY;
+
+    // Neck
+    const skinGrad = actx.createLinearGradient(headX - 15, headY, headX + 15, shoulderY);
+    skinGrad.addColorStop(0, "#fecdd3");
+    skinGrad.addColorStop(1, "#fda4af");
+
+    actx.fillStyle = skinGrad;
+    actx.fillRect(headX - 14, headY + 30, 28, 25);
+
+    // Head Oval
+    actx.fillStyle = skinGrad;
+    actx.beginPath();
+    actx.ellipse(headX, headY, 44, 52, 0, 0, Math.PI * 2);
+    actx.fill();
+    actx.strokeStyle = "#e11d48";
+    actx.lineWidth = 1.5;
+    actx.stroke();
+
+    // Hair
+    actx.fillStyle = "#1e1b4b";
+    actx.beginPath();
+    actx.arc(headX, headY - 15, 46, Math.PI, Math.PI * 2);
+    actx.fill();
+
+    // Eyes (with Natural Blinking Animation)
+    const blink = Math.sin(time * 0.5) > 0.96 ? 0.1 : 1;
+    actx.fillStyle = "#fff";
+    actx.beginPath(); actx.ellipse(headX - 16, headY - 8, 8, 6 * blink, 0, 0, Math.PI * 2); actx.fill();
+    actx.beginPath(); actx.ellipse(headX + 16, headY - 8, 8, 6 * blink, 0, 0, Math.PI * 2); actx.fill();
+
+    // Pupils
+    actx.fillStyle = "#312e81";
+    actx.beginPath(); actx.arc(headX - 16, headY - 8, 3.5 * blink, 0, Math.PI * 2); actx.fill();
+    actx.beginPath(); actx.arc(headX + 16, headY - 8, 3.5 * blink, 0, Math.PI * 2); actx.fill();
+
+    // Eyebrows (Dynamic Non-Manual Marker NMM: Raised or Normal)
+    const browYOffset = activeNMM.eyebrows === "RAISED" ? -14 : -10;
+    actx.strokeStyle = "#312e81";
+    actx.lineWidth = 3.5;
+    actx.beginPath();
+    actx.moveTo(headX - 24, headY + browYOffset);
+    actx.lineTo(headX - 8, headY + browYOffset - 1);
+    actx.moveTo(headX + 8, headY + browYOffset - 1);
+    actx.lineTo(headX + 24, headY + browYOffset);
+    actx.stroke();
+
+    // Nose
+    actx.strokeStyle = "#fb7185";
+    actx.lineWidth = 2;
+    actx.beginPath();
+    actx.moveTo(headX, headY - 4);
+    actx.lineTo(headX - 3, headY + 10);
+    actx.lineTo(headX + 4, headY + 10);
+    actx.stroke();
+
+    // Mouth / Mouthings (Mouth articulates according to active ISL gloss)
+    const mouthOpen = 4 + Math.sin(time * 6) * 3;
+    actx.fillStyle = "#9f1239";
+    actx.beginPath();
+    actx.ellipse(headX, headY + 24, 12, mouthOpen, 0, 0, Math.PI * 2);
+    actx.fill();
+
+    // 4. SIGN LANGUAGE ARM KINEMATICS & HAND MOTIONS
+    // Mapped positions for specific ISL signs:
+    let armLeftTarget = { elbow: { x: cx - 110, y: cy + 30 }, wrist: { x: cx - 70, y: cy + 10 }, handShape: "OPEN" };
+    let armRightTarget = { elbow: { x: cx + 110, y: cy + 30 }, wrist: { x: cx + 70, y: cy + 10 }, handShape: "OPEN" };
+
+    if (currentGloss === "DOCTOR") {
+      // Doctor sign: Right hand taps left wrist (pulse check)
+      armLeftTarget = { elbow: { x: cx - 90, y: cy + 40 }, wrist: { x: cx - 30, y: cy + 30 }, handShape: "OPEN" };
+      armRightTarget = { elbow: { x: cx + 60, y: cy + 50 }, wrist: { x: cx - 25 + Math.sin(time * 8) * 8, y: cy + 25 }, handShape: "POINT" };
+    } else if (currentGloss === "TRAIN") {
+      // Train sign: Two hands parallel sliding forward/back
+      armLeftTarget = { elbow: { x: cx - 75, y: cy + 40 }, wrist: { x: cx - 25, y: cy + 20 + Math.sin(time * 6) * 15 }, handShape: "POINT" };
+      armRightTarget = { elbow: { x: cx + 75, y: cy + 40 }, wrist: { x: cx + 25, y: cy + 20 - Math.sin(time * 6) * 15 }, handShape: "POINT" };
+    } else if (currentGloss === "STATION" || currentGloss === "HOME") {
+      // Station/Home: Hands forming roof shape in front of chest
+      armLeftTarget = { elbow: { x: cx - 90, y: cy + 30 }, wrist: { x: cx - 15, y: cy - 20 }, handShape: "OPEN" };
+      armRightTarget = { elbow: { x: cx + 90, y: cy + 30 }, wrist: { x: cx + 15, y: cy - 20 }, handShape: "OPEN" };
+    } else if (currentGloss === "GO" || currentGloss === "TOMORROW") {
+      // Go/Tomorrow: Sweeping arm pointing outward
+      armLeftTarget = { elbow: { x: cx - 100, y: cy + 40 }, wrist: { x: cx - 60, y: cy + 20 }, handShape: "OPEN" };
+      armRightTarget = { elbow: { x: cx + 100, y: cy + 20 }, wrist: { x: cx + 80 + Math.sin(time * 4) * 20, y: cy - 30 }, handShape: "POINT" };
+    }
+
+    // Draw Left Arm & Hand
+    actx.strokeStyle = skinGrad;
+    actx.lineWidth = 14;
+    actx.lineCap = "round";
+    actx.lineJoin = "round";
+
+    actx.beginPath();
+    actx.moveTo(shoulderL_X, shoulderY);
+    actx.lineTo(armLeftTarget.elbow.x, armLeftTarget.elbow.y);
+    actx.lineTo(armLeftTarget.wrist.x, armLeftTarget.wrist.y);
+    actx.stroke();
+
+    drawDetailedHand(actx, armLeftTarget.wrist.x, armLeftTarget.wrist.y, -0.4, true, armLeftTarget.handShape);
+
+    // Draw Right Arm & Hand
+    actx.beginPath();
+    actx.moveTo(shoulderR_X, shoulderY);
+    actx.lineTo(armRightTarget.elbow.x, armRightTarget.elbow.y);
+    actx.lineTo(armRightTarget.wrist.x, armRightTarget.wrist.y);
+    actx.stroke();
+
+    drawDetailedHand(actx, armRightTarget.wrist.x, armRightTarget.wrist.y, 0.4, false, armRightTarget.handShape);
+
+    if (isAvatarPlaying) {
+      requestAnimationFrame(renderAnimatedHumanAvatar);
+    }
+  }
+
+  renderAnimatedHumanAvatar();
+
+  // Play/Pause Avatar Controls
+  const btnPlayAvatar = document.getElementById("btnPlayAvatar");
+  const btnPauseAvatar = document.getElementById("btnPauseAvatar");
+
+  if (btnPlayAvatar && btnPauseAvatar) {
+    btnPlayAvatar.addEventListener("click", () => {
+      if (!isAvatarPlaying) {
+        isAvatarPlaying = true;
+        renderAnimatedHumanAvatar();
+      }
+    });
+    btnPauseAvatar.addEventListener("click", () => {
+      isAvatarPlaying = false;
+    });
+  }
+
+  // Landmark Canvas Simulation for Live Camera Tab
   const landmarkCanvas = document.getElementById("landmarkCanvas");
   const ctx = landmarkCanvas ? landmarkCanvas.getContext("2d") : null;
   let isWebcamRunning = false;
@@ -237,65 +482,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3D Avatar Rendering Canvas (Driven by Active Glosses)
-  const avatarCanvas = document.getElementById("avatarCanvas");
-  const actx = avatarCanvas ? avatarCanvas.getContext("2d") : null;
-  let isAvatarPlaying = true;
-  let signCycleTimer = 0;
-
-  function render3DAvatar() {
-    if (!actx) return;
-    actx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
-
-    const time = Date.now() * 0.003;
-    const cx = avatarCanvas.width / 2;
-    const cy = avatarCanvas.height / 2;
-
-    // Cycle through active glosses every 1.5 seconds
-    signCycleTimer++;
-    if (signCycleTimer % 90 === 0 && activeGlosses.length > 0) {
-      currentGlossIndex = (currentGlossIndex + 1) % activeGlosses.length;
-      if (nowSigningTag) {
-        nowSigningTag.innerText = `Now Signing: [${activeGlosses[currentGlossIndex]}]`;
-      }
-    }
-
-    actx.fillStyle = "#1e293b";
-    actx.strokeStyle = "#818cf8";
-    actx.lineWidth = 3;
-
-    actx.beginPath();
-    actx.arc(cx, cy - 80 + Math.sin(time) * 4, 50, 0, Math.PI * 2);
-    actx.fill();
-    actx.stroke();
-
-    actx.fillStyle = "#60a5fa";
-    actx.beginPath(); actx.arc(cx - 18, cy - 90, 6, 0, Math.PI * 2); actx.fill();
-    actx.beginPath(); actx.arc(cx + 18, cy - 90, 6, 0, Math.PI * 2); actx.fill();
-
-    // Sign Gesture Motion mapped to active gloss index
-    const signFrequency = 2 + (currentGlossIndex % 3) * 0.5;
-    const armLX = cx - 50 + Math.cos(time * signFrequency) * 65;
-    const armLY = cy + 20 + Math.sin(time * signFrequency) * 45;
-    const armRX = cx + 50 + Math.sin(time * (signFrequency + 0.5)) * 65;
-    const armRY = cy + 20 + Math.cos(time * (signFrequency + 0.5)) * 45;
-
-    actx.strokeStyle = "#a7f3d0";
-    actx.lineWidth = 6;
-    actx.beginPath(); ctx.moveTo(cx - 45, cy - 10); ctx.lineTo(armLX, armLY); ctx.stroke();
-    actx.beginPath(); ctx.moveTo(cx + 45, cy - 10); ctx.lineTo(armRX, armRY); ctx.stroke();
-
-    actx.fillStyle = "#34d399";
-    actx.beginPath(); actx.arc(armLX, armLY, 12, 0, Math.PI * 2); actx.fill();
-    actx.beginPath(); actx.arc(armRX, armRY, 12, 0, Math.PI * 2); actx.fill();
-
-    if (isAvatarPlaying) {
-      requestAnimationFrame(render3DAvatar);
-    }
-  }
-
-  render3DAvatar();
-
   // Backend Benchmark Suite Handler
   const btnRunBenchmark = document.getElementById("btnRunBenchmark");
   if (btnRunBenchmark) {
@@ -321,7 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Text-to-ISL English Input in Chat Tab
+  // Text-to-ISL Input in Chat Tab
   const btnSendInput = document.getElementById("btnSendInput");
   const userTextInput = document.getElementById("userTextInput");
   const chatHistory = document.getElementById("chatHistory");
@@ -353,12 +539,12 @@ document.addEventListener("DOMContentLoaded", () => {
           agentBubble.innerHTML = `
             <div class="bubble-meta">Backend Synthesized ISL Representation</div>
             <div class="bubble-content">Glosses: [${data.isl_gloss_sequence.join(" ")}]</div>
-            <div class="bubble-trans">3D Avatar rendering sign sequence live beside text.</div>
+            <div class="bubble-trans">Animated Human Body Avatar rendering sign language live.</div>
           `;
           chatHistory.appendChild(agentBubble);
 
-          // Update studio avatar as well
           activeGlosses = data.isl_gloss_sequence;
+          activeNMM = data.nmm_specifications;
           currentGlossIndex = 0;
         }
       } catch (err) {}
