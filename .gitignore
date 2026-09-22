@@ -30,3 +30,10 @@ data/processed/*
 Thumbs.db
 desktop.ini
 *.tmp
+
+# Android Build / Gradle Caches
+.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+

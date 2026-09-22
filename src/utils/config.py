@@ -122,6 +122,13 @@ class MobileConfig(BaseModel):
     max_p95_latency_ms: float = 200.0
     max_ram_mb: float = 500.0
     export_onnx: bool = True
+    quality_loss_tolerance: float = 0.05
+    supported_precisions: List[str] = Field(
+        default_factory=lambda: ["fp32", "fp16", "int8_dynamic", "int8_static"]
+    )
+    num_benchmark_runs: int = 50
+    warmup_runs: int = 10
+
 
 
 class AvatarConfig(BaseModel):
