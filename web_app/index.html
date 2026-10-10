@@ -47,10 +47,6 @@
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
         <span>Bidirectional Dialogue (SBDS)</span>
       </div>
-      <div class="nav-item" data-tab="avatar">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
-        <span>3D Avatar Side-by-Side Studio</span>
-      </div>
       <div class="nav-item" data-tab="signer-adaptation">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg>
         <span>Signer Adaptation (UGSA)</span>
@@ -158,10 +154,9 @@
         <div class="pane-grid">
           <div class="card chat-card">
             <div class="card-header">
-              <h2><span class="icon">💬</span> Bidirectional Conversation Engine</h2>
+              <h2><span class="icon">💬</span> Continuous ISL Dialogue State (SBDS)</h2>
               <div class="mode-toggle">
-                <button id="btnModeForward" class="btn btn-sm btn-accent active">ISL → English</button>
-                <button id="btnModeReverse" class="btn btn-sm btn-secondary">English → ISL Avatar</button>
+                <span class="badge badge-accent">Forward ISL → English</span>
               </div>
             </div>
 
@@ -172,15 +167,15 @@
                 <div class="bubble-trans">Translated: "What time is my doctor appointment?"</div>
               </div>
               <div class="chat-bubble agent-eng">
-                <div class="bubble-meta">System (English Turn 2)</div>
+                <div class="bubble-meta">System Context (English Turn 2)</div>
                 <div class="bubble-content">"Your doctor appointment is at 4:30 PM today at City Hospital."</div>
-                <div class="bubble-trans">Rendered on ISL Avatar: [DOCTOR APPOINTMENT TODAY 4:30 PM CITY HOSPITAL]</div>
+                <div class="bubble-trans">Historical Dialogue Turn preserved in SBDS</div>
               </div>
             </div>
 
             <div class="chat-input-row">
-              <input type="text" id="userTextInput" placeholder="Type English sentence to translate to ISL Avatar..." />
-              <button id="btnSendInput" class="btn btn-primary">Translate & Render</button>
+              <input type="text" id="userTextInput" placeholder="Type query / dialogue context to update SBDS..." />
+              <button id="btnSendInput" class="btn btn-primary">Update Dialogue State</button>
             </div>
           </div>
 
@@ -221,80 +216,6 @@
               <div class="btn-group">
                 <button id="btnInjectClean" class="btn btn-sm btn-outline">Clean Context</button>
                 <button id="btnInjectMisleading" class="btn btn-sm btn-warning">Inject Contradictory Turn</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: 3D Avatar Side-by-Side Studio -->
-      <section id="avatar" class="tab-pane">
-        <div class="card side-by-side-card">
-          <div class="card-header">
-            <h2><span class="icon">👤</span> Side-by-Side Text & 3D ISL Avatar Studio</h2>
-            <span class="status-badge live">REAL-TIME SIGN RENDERING</span>
-          </div>
-
-          <div class="grid-2col side-by-side-container">
-            <!-- Left Column: User Input & Synthesized Representation -->
-            <div class="studio-col left-col">
-              <h3>1. User English Text Input</h3>
-              <p class="sub-text">Enter any sentence below. The Python backend will convert it into ISL glosses & non-manual facial expressions, rendering the sign language directly on the Avatar beside it!</p>
-
-              <div class="input-box-group">
-                <textarea id="studioTextInput" rows="3" placeholder="Type text here e.g. 'I will go to the doctor today for my appointment'"></textarea>
-                <button id="btnRenderStudio" class="btn btn-primary btn-block">✨ Translate to Sign Language Avatar</button>
-              </div>
-
-              <div class="presets-row">
-                <span class="preset-label">Preset Sentences:</span>
-                <button class="preset-btn" data-text="I will go to the doctor today">Doctor Visit</button>
-                <button class="preset-btn" data-text="Where is the train station?">Train Station</button>
-                <button class="preset-btn" data-text="What time is my appointment?">Appointment Time</button>
-                <button class="preset-btn" data-text="Hello, thank you for your help!">Greeting</button>
-              </div>
-
-              <div class="representation-details">
-                <div class="rep-box">
-                  <h4>Backend Synthesized Gloss Sequence:</h4>
-                  <div id="studioGlossDisplay" class="gloss-tokens">
-                    <span class="token">DOCTOR</span>
-                    <span class="token">APPOINTMENT</span>
-                    <span class="token">TODAY</span>
-                    <span class="token">TIME</span>
-                    <span class="token">WHAT</span>
-                  </div>
-                </div>
-
-                <div class="rep-box">
-                  <h4>Non-Manual Markers (NMM):</h4>
-                  <div id="studioNmmDisplay" class="code-block">
-Eyebrows: RAISED (Question) | Head Pose: TILT_LEFT | Mouthings: /dok-tor/
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Column: 3D Avatar (Beside the text!) -->
-            <div class="studio-col right-col">
-              <div class="avatar-header-row">
-                <h3>2. Live ISL Avatar Rendering (Beside Text)</h3>
-                <div class="now-signing-badge" id="nowSigningTag">Now Signing: [DOCTOR]</div>
-              </div>
-
-              <div class="avatar-canvas-wrapper studio-wrapper">
-                <canvas id="avatarCanvas" width="540" height="400"></canvas>
-                <div class="avatar-overlay-info">
-                  <div class="nmm-badge" id="nmmDisplay">NMM: Eyebrows Raised | Head Tilt Left | Mouth: "DOCTOR"</div>
-                </div>
-              </div>
-
-              <div class="avatar-playbar">
-                <button id="btnPlayAvatar" class="btn btn-primary btn-sm">▶ Play Sign Sequence</button>
-                <button id="btnPauseAvatar" class="btn btn-secondary btn-sm">⏸ Pause</button>
-                <div class="timeline-slider">
-                  <input type="range" id="timelineRange" min="0" max="100" value="35">
-                </div>
               </div>
             </div>
           </div>

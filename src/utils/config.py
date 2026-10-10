@@ -125,10 +125,10 @@ class MobileConfig(BaseModel):
 
 
 class AvatarConfig(BaseModel):
-    enable_avatar: bool = True
+    enable_avatar: bool = False
     rig_type: str = "humanoid_rig"
     fps: float = 60.0
-    non_manual_markers_enabled: bool = True
+    non_manual_markers_enabled: bool = False
     blendshape_count: int = 52
 
 

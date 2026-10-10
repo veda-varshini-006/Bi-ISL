@@ -1,37 +1,40 @@
-"""Bi-ISL Production FastAPI Backend Server.
+"""Bi-ISL AR Real-Time Continuous ISL Translation FastAPI Backend Server.
 
-Provides REST and real-time endpoints for:
-- Continuous ISL landmark sequence translation (using PyTorch base model)
-- English-to-ISL reverse generation for 3D avatar rendering
-- Shared Bidirectional Dialogue State (SBDS) inspection & gating
-- Hardware benchmarking (XNNPACK / PyTorch CPU/GPU telemetry)
+Provides REST and real-time streaming endpoints for:
+- Real-time continuous Indian Sign Language (ISL) to English sentence translation
+- Pose-Motion Transformer with SentencePiece decoding (5000 vocab)
+- Sign activity segmentation & AR subtitle stabilization
+- Low-latency Wi-Fi communication for Android AR app and Web clients
+- Hardware telemetry & inference benchmarking
 """
 
 import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 import numpy as np
 import torch
 import torch.nn as nn
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 # Ensure src module can be imported
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.models.landmark_baseline import LandmarkSequenceBaseline
+from src.models.pose_motion_transformer import BiISLTranslator
+from src.text.subtitle_stabilizer import SubtitleStabilizer, ARSubtitle
+from src.vision.sentence_segmenter import SignActivityDetector
 
 app = FastAPI(
-    title="Bi-ISL Research Backend API",
-    description="Context-Gated Signer-Adaptive Engine for Indian Sign Language Translation",
-    version="1.0.0"
+    title="Bi-ISL AR Real-Time Translation API",
+    description="Continuous Indian Sign Language to English Sentence Translation Backend for Android AR & Web HUD",
+    version="2.0.0"
 )
 
-# Enable CORS for Web UI (localhost:8080) and Mobile Clients
+# Enable CORS for Web UI and Mobile Clients on Local Wi-Fi
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -40,96 +43,68 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global State for Model & Dialogue State
-MODEL_PATH = Path(r"C:\Users\ADMIN\Downloads\baseline_best_v1.pt")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model: Optional[LandmarkSequenceBaseline] = None
+# Global Translator & Stabilizer Instances
+translator: Optional[BiISLTranslator] = None
+stabilizer: SubtitleStabilizer = SubtitleStabilizer(hold_time_sec=4.0)
+stream_segmenter: SignActivityDetector = SignActivityDetector(
+    motion_threshold=0.015,
+    rest_pause_frames=12,
+    min_sign_frames=15,
+    max_sign_frames=128
+)
+
 model_load_status: str = "Uninitialized"
 model_load_time_ms: float = 0.0
-
-# Mock Vocabulary for Gloss Decoding
-VOCAB = [
-    "<PAD>", "<UNK>", "ME", "YOU", "GO", "TRAIN", "STATION", "TOMORROW",
-    "DOCTOR", "APPOINTMENT", "HOSPITAL", "TIME", "WHAT", "WHERE", "PLEASE",
-    "HELP", "NAME", "THANK_YOU", "BUS", "HOME", "TODAY", "CITY", "FEVER",
-    "FOOD", "WATER", "WORK", "FAMILY", "FRIEND", "GOOD", "MORNING"
-]
-
-# Shared Bidirectional Dialogue State (SBDS)
-sbds_state: Dict[str, Any] = {
-    "entities": ["Doctor", "Appointment", "City Hospital"],
-    "intents": ["Query_Schedule"],
-    "referents": {"Time": "16:30", "Location": "City Hospital"},
-    "temporal_attributes": "Today (2026-09-19)",
-    "confidence_metadata": {"mu": 0.962, "sigma": 0.014},
-    "previous_turn": "What time is my doctor appointment?",
-    "misleading_context_injected": False
-}
+active_checkpoint_name: str = "PositionMotionTransformer_finetune_lr1e5_latest.pt"
 
 
-def load_model_checkpoint():
-    global model, model_load_status, model_load_time_ms
+def init_translation_engine():
+    global translator, model_load_status, model_load_time_ms
     start_t = time.perf_counter()
-
     try:
-        model_inst = LandmarkSequenceBaseline(
-            input_dim=258,
-            hidden_dim=128,
-            num_layers=2,
-            vocab_size=len(VOCAB),
-            rnn_type="GRU"
-        ).to(device)
-
-        if MODEL_PATH.exists():
-            checkpoint = torch.load(str(MODEL_PATH), map_location=device, weights_only=False)
-            if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
-                model_inst.load_state_dict(checkpoint["state_dict"], strict=False)
-            elif isinstance(checkpoint, dict):
-                model_inst.load_state_dict(checkpoint, strict=False)
-            else:
-                model_inst = checkpoint
-
-            model_load_status = f"Loaded checkpoint from {MODEL_PATH.name} ({device.type.upper()})"
-        else:
-            model_load_status = f"Initialized dynamic model weights ({device.type.upper()})"
-
-        model_inst.eval()
-        model = model_inst
+        translator = BiISLTranslator.load_default(device=device)
         model_load_time_ms = round((time.perf_counter() - start_t) * 1000, 2)
+        tok_status = "with SentencePiece (5k vocab)" if translator.sp is not None else "without tokenizer"
+        model_load_status = f"Loaded Pose-Motion Transformer ({device.type.upper()}) {tok_status}"
         print(f"[{model_load_status}] loaded in {model_load_time_ms} ms.")
-
     except Exception as e:
-        print(f"[Warning] Failed loading weights cleanly: {e}. Falling back to default architecture.")
-        model = LandmarkSequenceBaseline(
-            input_dim=258, hidden_dim=128, num_layers=2, vocab_size=len(VOCAB)
-        ).to(device)
-        model.eval()
-        model_load_status = f"Initialized Fallback Model ({device.type.upper()})"
+        print(f"[Warning] Error initializing translation engine: {e}")
+        model_load_status = f"Initialized Fallback Pose-Motion Engine ({device.type.upper()})"
+        translator = BiISLTranslator(device=device)
         model_load_time_ms = round((time.perf_counter() - start_t) * 1000, 2)
 
 
 @app.on_event("startup")
 def startup_event():
-    load_model_checkpoint()
+    init_translation_engine()
 
 
 # --- Pydantic Data Models ---
+
 class LandmarkPredictRequest(BaseModel):
-    landmarks: List[List[float]] = Field(
-        ..., description="Sequence of landmark frames [T, 258] or 1D flattened array"
+    landmarks: List[Any] = Field(
+        ..., description="Continuous landmark sequence: [T, 75, 3] or [T, 225] or [T, 258] or 1D flat"
     )
     signer_id: Optional[str] = "signer_01"
-    context_gate_enabled: Optional[bool] = True
+    stabilize: Optional[bool] = True
 
 
-class TextToISLRequest(BaseModel):
-    text: str = Field(..., example="I will go to the train station tomorrow.")
+class StreamingFrameRequest(BaseModel):
+    landmarks: List[Any] = Field(
+        ..., description="Single frame landmarks [75, 3] or [225] or [258]"
+    )
+    timestamp: Optional[float] = None
+    signer_id: Optional[str] = "signer_01"
 
 
-class SBDSUpdateRequest(BaseModel):
-    misleading_context: Optional[bool] = False
-    entities: Optional[List[str]] = None
+class TranslationResponse(BaseModel):
+    english_sentence: str
+    confidence: float
+    is_stable: bool
+    num_frames: int
+    inference_latency_ms: float
 
 
 # --- REST API Endpoints ---
@@ -137,150 +112,186 @@ class SBDSUpdateRequest(BaseModel):
 @app.get("/health")
 @app.get("/api/status")
 def get_status():
-    """Returns engine health, active model status, and latency stats."""
+    """Returns engine health, active model status, device, and tokenizer details."""
+    vocab_size = translator.sp.get_piece_size() if (translator and translator.sp) else 5000
+    has_sp = (translator is not None and translator.sp is not None)
     return {
         "status": "online",
+        "service": "Bi-ISL AR Translation Engine",
         "model_status": model_load_status,
-        "model_file": MODEL_PATH.name,
-        "model_load_time_ms": model_load_time_ms,
+        "active_checkpoint": active_checkpoint_name,
         "device": device.type.upper(),
         "pytorch_version": torch.__version__,
-        "vocab_size": len(VOCAB),
-        "sbds_active": True
+        "tokenizer_active": has_sp,
+        "vocab_size": vocab_size,
+        "model_load_time_ms": model_load_time_ms
     }
 
 
 @app.post("/api/predict")
 def predict_isl(req: LandmarkPredictRequest):
-    """Predicts continuous ISL gloss sequence and English sentence from 3D landmarks."""
+    """Predicts continuous ISL English sentence translation from 3D landmark sequence."""
+    if translator is None:
+        raise HTTPException(status_code=503, detail="Model engine not initialized.")
+
     start_t = time.perf_counter()
     raw_landmarks = req.landmarks
 
     if not raw_landmarks:
         raise HTTPException(status_code=400, detail="Landmark sequence cannot be empty.")
 
-    # Convert to Tensor (B, T, D)
     try:
         arr = np.array(raw_landmarks, dtype=np.float32)
+
+        # Normalize shape
         if arr.ndim == 1:
-            # Flattened single frame or sequence -> reshape to (1, -1, 258)
-            num_frames = max(1, len(arr) // 258)
-            arr = arr[:num_frames * 258].reshape(1, num_frames, 258)
+            num_elements = len(arr)
+            if num_elements % 225 == 0:
+                frames = num_elements // 225
+                arr = arr.reshape(frames, 75, 3)
+            elif num_elements % 258 == 0:
+                frames = num_elements // 258
+                arr = arr.reshape(frames, 258)[:, :225].reshape(frames, 75, 3)
+            else:
+                frames = max(1, num_elements // 225)
+                arr = np.pad(arr, (0, max(0, frames * 225 - num_elements)))[:frames * 225].reshape(frames, 75, 3)
         elif arr.ndim == 2:
-            arr = np.expand_dims(arr, axis=0)
+            T, D = arr.shape
+            if D == 225:
+                arr = arr.reshape(T, 75, 3)
+            elif D == 258:
+                arr = arr[:, :225].reshape(T, 75, 3)
+            elif D == 3 and T == 75:
+                arr = arr.reshape(1, 75, 3)
 
-        tensor_in = torch.from_numpy(arr).to(device)
+        num_frames = arr.shape[0] if arr.ndim >= 2 else 1
+
+        # Interpolate / resample to 128 frames
+        if num_frames != 128:
+            tensor_raw = torch.from_numpy(arr).to(dtype=torch.float32)
+            if tensor_raw.dim() == 3:
+                # (T, 75, 3) -> (1, 225, T)
+                tensor_flat = tensor_raw.reshape(num_frames, 225).permute(1, 0).unsqueeze(0)
+                tensor_resampled = torch.nn.functional.interpolate(
+                    tensor_flat, size=128, mode="linear", align_corners=False
+                )
+                arr_128 = tensor_resampled.squeeze(0).permute(1, 0).reshape(128, 75, 3).numpy()
+            else:
+                arr_128 = np.zeros((128, 75, 3), dtype=np.float32)
+        else:
+            arr_128 = arr
+
+        # Real autoregressive Transformer decoding
+        raw_text, conf = translator.translate(arr_128, return_confidence=True)
+
+        if req.stabilize:
+            sub = stabilizer.update(raw_text, conf)
+            final_text = sub.text if sub else raw_text
+            is_stable = (sub is not None)
+        else:
+            final_text = raw_text
+            is_stable = True
+
+        latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
+
+        return {
+            "english_sentence": final_text,
+            "raw_translation": raw_text,
+            "confidence": round(float(conf), 4),
+            "is_stable": is_stable,
+            "num_frames_received": num_frames,
+            "inference_latency_ms": latency_ms
+        }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid landmark format: {e}")
+        raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
 
-    # Model Pass
-    with torch.no_grad():
-        logits = model(tensor_in)  # (1, T, V)
-        probs = torch.softmax(logits, dim=-1)
-        preds = torch.argmax(probs, dim=-1).squeeze(0).cpu().numpy()
-        conf_scores = torch.max(probs, dim=-1).values.squeeze(0).cpu().numpy()
 
-    # Decode Glosses
-    gloss_tokens = []
-    seen = set()
-    for idx in preds:
-        token = VOCAB[idx] if idx < len(VOCAB) else "<UNK>"
-        if token not in ["<PAD>", "<UNK>"] and token not in seen:
-            gloss_tokens.append(token)
-            seen.add(token)
+@app.post("/api/translate_stream")
+def translate_stream(req: StreamingFrameRequest):
+    """Processes incoming stream frames, segments sign activity, and updates AR subtitles."""
+    if translator is None:
+        raise HTTPException(status_code=503, detail="Model engine not initialized.")
 
-    if not gloss_tokens:
-        gloss_tokens = ["ME", "TRAIN", "STATION", "GO", "TOMORROW"]
+    start_t = time.perf_counter()
+    raw = np.array(req.landmarks, dtype=np.float32)
 
-    # Compute Context Gate
-    avg_conf = float(np.mean(conf_scores))
-    gate_reliability = 0.925 if not sbds_state["misleading_context_injected"] else 0.412
-    gate_status = "PASS" if gate_reliability > 0.5 else "GATED (Misleading History Blocked)"
+    # Format to (75, 3)
+    if raw.ndim == 1:
+        if len(raw) >= 225:
+            frame_75 = raw[:225].reshape(75, 3)
+        else:
+            frame_75 = np.pad(raw, (0, 225 - len(raw))).reshape(75, 3)
+    elif raw.ndim == 2:
+        if raw.shape == (75, 3):
+            frame_75 = raw
+        elif raw.shape[1] == 3 and len(raw) >= 75:
+            frame_75 = raw[:75]
+        else:
+            frame_75 = raw.flatten()[:225].reshape(75, 3)
+    else:
+        frame_75 = np.zeros((75, 3), dtype=np.float32)
 
-    # Synthesize English Sentence
-    sentence = "I will go to the train station tomorrow."
-    if "DOCTOR" in gloss_tokens or "APPOINTMENT" in gloss_tokens:
-        sentence = "What time is my doctor appointment?"
+    is_signing, completed_seq = stream_segmenter.process_frame(frame_75)
 
+    translation_occurred = False
+    new_text = ""
+    conf = 0.0
+
+    if completed_seq is not None and len(completed_seq) >= 15:
+        arr = np.array(completed_seq, dtype=np.float32)
+        tensor_raw = torch.from_numpy(arr).to(dtype=torch.float32)
+        tensor_flat = tensor_raw.reshape(len(arr), 225).permute(1, 0).unsqueeze(0)
+        tensor_resampled = torch.nn.functional.interpolate(
+            tensor_flat, size=128, mode="linear", align_corners=False
+        )
+        arr_128 = tensor_resampled.squeeze(0).permute(1, 0).reshape(128, 75, 3).numpy()
+
+        new_text, conf = translator.translate(arr_128, return_confidence=True)
+        if new_text and len(new_text.strip()) > 0:
+            stabilizer.update(new_text, conf)
+            translation_occurred = True
+
+    current_sub = stabilizer.get_current_subtitle()
     latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
 
     return {
-        "gloss_sequence": gloss_tokens,
-        "english_sentence": sentence,
-        "sentence_confidence": round(avg_conf, 4),
-        "context_reliability_gate": {
-            "value": gate_reliability,
-            "status": gate_status,
-            "visual_evidence_weight": round(gate_reliability * 100, 1)
-        },
-        "inference_latency_ms": latency_ms
+        "is_signing": is_signing,
+        "translation_updated": translation_occurred,
+        "ar_subtitle": current_sub.text if current_sub else "",
+        "ar_confidence": round(current_sub.confidence, 4) if current_sub else 0.0,
+        "buffered_frames": stream_segmenter.current_buffer_length,
+        "latency_ms": latency_ms
     }
 
 
-@app.post("/api/text_to_isl")
-def text_to_isl(req: TextToISLRequest):
-    """Converts English text into an intermediate ISL representation for 3D avatar rendering."""
-    text = req.text.strip()
-    words = [w.strip(".,!?").upper() for w in text.split()]
-    
-    # Simple rule-based gloss mapping
-    glosses = [w for w in words if w in VOCAB or len(w) > 2]
-    if not glosses:
-        glosses = ["HELLO", "WELCOME"]
-
-    nmm_spec = {
-        "eyebrows": "RAISED" if "?" in text else "NEUTRAL",
-        "head_tilt": "LEFT" if len(words) > 4 else "FORWARD",
-        "mouthings": f"/{words[0].lower() if words else 'sign'}/",
-        "body_posture": "ERECT"
-    }
-
-    return {
-        "input_text": text,
-        "isl_gloss_sequence": glosses,
-        "nmm_specifications": nmm_spec,
-        "frame_duration_ms": len(glosses) * 400
-    }
-
-
-@app.get("/api/sbds")
-def get_sbds():
-    """Get active Shared Bidirectional Dialogue State."""
-    return sbds_state
-
-
-@app.post("/api/sbds")
-def update_sbds(req: SBDSUpdateRequest):
-    """Inject adversarial context or update dialogue state."""
-    if req.misleading_context is not None:
-        sbds_state["misleading_context_injected"] = req.misleading_context
-        if req.misleading_context:
-            sbds_state["previous_turn"] = "CONTRADICTORY: I cancelled all appointments next month."
-        else:
-            sbds_state["previous_turn"] = "What time is my doctor appointment?"
-
-    if req.entities:
-        sbds_state["entities"] = req.entities
-
-    return {"status": "updated", "sbds_state": sbds_state}
+@app.post("/api/reset_stream")
+def reset_stream():
+    """Resets stream buffer and active subtitles."""
+    stream_segmenter.reset()
+    stabilizer.clear()
+    return {"status": "reset_successful"}
 
 
 @app.post("/api/benchmark")
 def run_benchmark():
-    """Runs a 100-iteration inference benchmark to compute p50 and p95 latency."""
-    dummy_input = torch.randn(1, 64, 258, device=device)
+    """Runs a 50-iteration inference benchmark to compute p50 and p95 latency."""
+    if translator is None:
+        raise HTTPException(status_code=503, detail="Model engine not initialized.")
+
+    dummy_input = torch.randn(1, 128, 75, 3, device=device)
+    dummy_tgt = torch.tensor([[2, 10, 20, 30]], dtype=torch.long, device=device)
     latencies = []
 
     # Warm-up (5 runs)
     for _ in range(5):
         with torch.no_grad():
-            _ = model(dummy_input)
+            _ = translator.model(dummy_input, dummy_tgt)
 
     # Benchmark (50 runs)
     for _ in range(50):
         t0 = time.perf_counter()
         with torch.no_grad():
-            _ = model(dummy_input)
+            _ = translator.model(dummy_input, dummy_tgt)
         latencies.append((time.perf_counter() - t0) * 1000)
 
     latencies.sort()
@@ -294,7 +305,6 @@ def run_benchmark():
         "p95_latency_ms": p95,
         "min_latency_ms": round(latencies[0], 2),
         "max_latency_ms": round(latencies[-1], 2),
-        "memory_ram_mb": 45.2,
         "target_met": p95 < 200.0
     }
 
