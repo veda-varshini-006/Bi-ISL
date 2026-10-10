@@ -1,7 +1,8 @@
 """Bi-ISL English Subtitle Stabilization and Smoothing Engine.
 
 Prevents jitter, flickering, and duplicate text during streaming video translation inference.
-Applies confidence gating, temporal persistence, and Levenshtein similarity smoothing.
+Applies confidence gating, temporal persistence, Levenshtein similarity smoothing,
+and dual-stage provisional vs finalized prediction management.
 """
 
 import time
@@ -17,7 +18,7 @@ class ARSubtitle:
         confidence: float,
         timestamp: float,
         hold_duration_sec: float = 3.5,
-        status: str = "CONFIRMED"
+        status: str = "CONFIRMED"  # "PROVISIONAL" or "FINALIZED"
     ):
         self.text = text
         self.confidence = confidence
@@ -29,30 +30,49 @@ class ARSubtitle:
     def is_expired(self) -> bool:
         return (time.time() - self.timestamp) > self.hold_duration_sec
 
+    @property
+    def is_provisional(self) -> bool:
+        return self.status == "PROVISIONAL"
+
+    @property
+    def is_finalized(self) -> bool:
+        return self.status in ("FINALIZED", "CONFIRMED")
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "text": self.text,
             "confidence": round(self.confidence, 3),
             "timestamp": self.timestamp,
             "status": self.status,
-            "is_active": not self.is_expired
+            "is_active": not self.is_expired,
+            "is_finalized": self.is_finalized
         }
 
 
 class SubtitleStabilizer:
-    """Stabilizes real-time subtitles across overlapping translation inference windows."""
+    """Stabilizes real-time subtitles across overlapping translation inference windows.
+
+    Features:
+    - Provisional vs. Finalized subtitle separation
+    - Overlapping window deduplication (suppresses repeated text from sliding frames)
+    - Levenshtein similarity smoothing and confidence gating
+    - Temporal hold persistence
+    """
 
     def __init__(
         self,
         min_confidence: float = 0.45,
         hold_duration_sec: float = 4.0,
         similarity_threshold: float = 0.7,
-        hold_time_sec: Optional[float] = None
+        hold_time_sec: Optional[float] = None,
+        dedup_window_sec: float = 6.0
     ):
         self.min_confidence = min_confidence
         self.hold_duration_sec = hold_time_sec if hold_time_sec is not None else hold_duration_sec
         self.similarity_threshold = similarity_threshold
+        self.dedup_window_sec = dedup_window_sec
         self.active_subtitle: Optional[ARSubtitle] = None
+        self.finalized_history: List[ARSubtitle] = []
         self.recent_history: List[str] = []
 
     def _levenshtein_similarity(self, s1: str, s2: str) -> float:
@@ -78,8 +98,8 @@ class SubtitleStabilizer:
             for j in range(1, len2 + 1):
                 cost = 0 if s1_lower[i - 1] == s2_lower[j - 1] else 1
                 dp[i][j] = min(
-                    dp[i - 1][j] + 1,      # deletion
-                    dp[i][j - 1] + 1,      # insertion
+                    dp[i - 1][j] + 1,        # deletion
+                    dp[i][j - 1] + 1,        # insertion
                     dp[i - 1][j - 1] + cost  # substitution
                 )
 
@@ -87,15 +107,86 @@ class SubtitleStabilizer:
         max_len = max(len1, len2)
         return 1.0 - (distance / max_len)
 
-    def update(self, raw_text: str, confidence: float) -> Optional[ARSubtitle]:
-        """Processes a new raw prediction from the translation model.
+    def is_duplicate(self, candidate_text: str) -> bool:
+        """Checks if the candidate text duplicates recently finalized subtitles."""
+        if not candidate_text:
+            return True
 
-        Filters low-confidence results, suppresses minor phrasing fluctuations,
-        and refreshes expiration timestamps.
+        now = time.time()
+        c_clean = candidate_text.lower().strip()
+
+        for item in reversed(self.finalized_history):
+            if (now - item.timestamp) > self.dedup_window_sec:
+                break
+            prev_clean = item.text.lower().strip()
+            # Direct match or substring or high similarity
+            if c_clean == prev_clean:
+                return True
+            if self._levenshtein_similarity(c_clean, prev_clean) >= self.similarity_threshold:
+                return True
+            if len(c_clean) > 4 and len(prev_clean) > 4:
+                if c_clean in prev_clean or prev_clean in c_clean:
+                    return True
+
+        return False
+
+    def update_provisional(self, raw_text: str, confidence: float) -> Optional[ARSubtitle]:
+        """Updates the live preview with an in-progress, provisional translation during signing."""
+        raw_text = raw_text.strip()
+        if not raw_text or confidence < self.min_confidence:
+            return self.get_current()
+
+        now = time.time()
+        # Create or update provisional subtitle
+        self.active_subtitle = ARSubtitle(
+            text=raw_text,
+            confidence=confidence,
+            timestamp=now,
+            hold_duration_sec=self.hold_duration_sec,
+            status="PROVISIONAL"
+        )
+        return self.active_subtitle
+
+    def update_finalized(self, raw_text: str, confidence: float) -> Optional[ARSubtitle]:
+        """Locks in a completed sentence prediction at a sign pause or boundary.
+
+        Deduplicates against overlapping sliding-window passes.
         """
         raw_text = raw_text.strip()
         if not raw_text or confidence < self.min_confidence:
-            # Check if active subtitle has expired
+            return self.get_current()
+
+        # Check deduplication against recent finalized items
+        if self.is_duplicate(raw_text):
+            # Refresh timestamp of current active subtitle without creating a duplicate
+            if self.active_subtitle:
+                self.active_subtitle.timestamp = time.time()
+                return self.active_subtitle
+            return None
+
+        now = time.time()
+        final_sub = ARSubtitle(
+            text=raw_text,
+            confidence=confidence,
+            timestamp=now,
+            hold_duration_sec=self.hold_duration_sec,
+            status="FINALIZED"
+        )
+        self.active_subtitle = final_sub
+        self.finalized_history.append(final_sub)
+        self.recent_history.append(raw_text)
+
+        if len(self.finalized_history) > 50:
+            self.finalized_history.pop(0)
+        if len(self.recent_history) > 50:
+            self.recent_history.pop(0)
+
+        return self.active_subtitle
+
+    def update(self, raw_text: str, confidence: float) -> Optional[ARSubtitle]:
+        """Backward-compatible standard update (treats confident distinct text as finalized)."""
+        raw_text = raw_text.strip()
+        if not raw_text or confidence < self.min_confidence:
             if self.active_subtitle and self.active_subtitle.is_expired:
                 self.active_subtitle = None
             return self.active_subtitle
@@ -103,18 +194,17 @@ class SubtitleStabilizer:
         now = time.time()
 
         if self.active_subtitle is None:
-            # New subtitle
             self.active_subtitle = ARSubtitle(
                 text=raw_text,
                 confidence=confidence,
                 timestamp=now,
                 hold_duration_sec=self.hold_duration_sec,
-                status="CONFIRMED"
+                status="FINALIZED"
             )
+            self.finalized_history.append(self.active_subtitle)
             self.recent_history.append(raw_text)
             return self.active_subtitle
 
-        # Check similarity with current active subtitle
         similarity = self._levenshtein_similarity(raw_text, self.active_subtitle.text)
 
         if similarity >= self.similarity_threshold:
@@ -122,19 +212,21 @@ class SubtitleStabilizer:
             if len(raw_text) >= len(self.active_subtitle.text) or confidence > self.active_subtitle.confidence:
                 self.active_subtitle.text = raw_text
                 self.active_subtitle.confidence = max(self.active_subtitle.confidence, confidence)
-            self.active_subtitle.timestamp = now  # Refresh hold time
+            self.active_subtitle.timestamp = now
         else:
-            # New distinct sentence detected
-            self.active_subtitle = ARSubtitle(
-                text=raw_text,
-                confidence=confidence,
-                timestamp=now,
-                hold_duration_sec=self.hold_duration_sec,
-                status="CONFIRMED"
-            )
-            self.recent_history.append(raw_text)
+            # Check if this new sentence is already in recent history
+            if not self.is_duplicate(raw_text):
+                self.active_subtitle = ARSubtitle(
+                    text=raw_text,
+                    confidence=confidence,
+                    timestamp=now,
+                    hold_duration_sec=self.hold_duration_sec,
+                    status="FINALIZED"
+                )
+                self.finalized_history.append(self.active_subtitle)
+                self.recent_history.append(raw_text)
 
-        if len(self.recent_history) > 20:
+        if len(self.recent_history) > 50:
             self.recent_history.pop(0)
 
         return self.active_subtitle
@@ -152,4 +244,5 @@ class SubtitleStabilizer:
     def clear(self):
         """Clears current active subtitle and history."""
         self.active_subtitle = None
+        self.finalized_history = []
         self.recent_history = []

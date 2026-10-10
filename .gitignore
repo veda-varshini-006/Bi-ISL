@@ -42,3 +42,4 @@ local.properties
 
 # Run outputs & caches
 artifacts/runs/
+artifacts/checkpoints/PositionMotionTransformer_*.pt

@@ -234,9 +234,11 @@ def translate_stream(req: StreamingFrameRequest):
     is_signing, completed_seq = stream_segmenter.process_frame(frame_75)
 
     translation_occurred = False
-    new_text = ""
-    conf = 0.0
+    provisional_text = None
+    finalized_text = None
+    status = "IDLE"
 
+    # 1. Finalized sentence at boundary
     if completed_seq is not None and len(completed_seq) >= 15:
         arr = np.array(completed_seq, dtype=np.float32)
         tensor_raw = torch.from_numpy(arr).to(dtype=torch.float32)
@@ -248,17 +250,42 @@ def translate_stream(req: StreamingFrameRequest):
 
         new_text, conf = translator.translate(arr_128, return_confidence=True)
         if new_text and len(new_text.strip()) > 0:
-            stabilizer.update(new_text, conf)
-            translation_occurred = True
+            final_sub = stabilizer.update_finalized(new_text, conf)
+            if final_sub:
+                finalized_text = final_sub.text
+                status = "FINALIZED"
+                translation_occurred = True
+
+    # 2. Provisional draft while actively signing
+    elif is_signing and stream_segmenter.current_buffer_length >= 15:
+        status = "PROVISIONAL"
+        if stream_segmenter.current_buffer_length % 12 == 0:
+            current_buf = stream_segmenter.active_buffer
+            arr = np.array(current_buf, dtype=np.float32)
+            tensor_raw = torch.from_numpy(arr).to(dtype=torch.float32)
+            tensor_flat = tensor_raw.reshape(len(arr), 225).permute(1, 0).unsqueeze(0)
+            tensor_resampled = torch.nn.functional.interpolate(
+                tensor_flat, size=128, mode="linear", align_corners=False
+            )
+            arr_128 = tensor_resampled.squeeze(0).permute(1, 0).reshape(128, 75, 3).numpy()
+            prov_text, conf = translator.translate(arr_128, return_confidence=True)
+            if prov_text and len(prov_text.strip()) > 0:
+                prov_sub = stabilizer.update_provisional(prov_text, conf)
+                if prov_sub:
+                    provisional_text = prov_sub.text
+                    translation_occurred = True
 
     current_sub = stabilizer.get_current_subtitle()
     latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
 
     return {
         "is_signing": is_signing,
+        "status": current_sub.status if current_sub else status,
         "translation_updated": translation_occurred,
         "ar_subtitle": current_sub.text if current_sub else "",
         "ar_confidence": round(current_sub.confidence, 4) if current_sub else 0.0,
+        "finalized_text": finalized_text,
+        "provisional_text": provisional_text,
         "buffered_frames": stream_segmenter.current_buffer_length,
         "latency_ms": latency_ms
     }
