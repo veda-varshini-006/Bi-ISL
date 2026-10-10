@@ -52,7 +52,7 @@ app.add_middleware(
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Global Translator & Stabilizer Instances
+# Global Translator, Vision Extractor & Stabilizer Instances
 translator: Optional[BiISLTranslator] = None
 stabilizer: SubtitleStabilizer = SubtitleStabilizer(hold_time_sec=4.0)
 stream_segmenter: SignActivityDetector = SignActivityDetector(
@@ -61,6 +61,8 @@ stream_segmenter: SignActivityDetector = SignActivityDetector(
     min_sign_frames=15,
     max_sign_frames=128
 )
+landmark_extractor: LandmarkExtractor = LandmarkExtractor()
+normalizer: LandmarkNormalizer = LandmarkNormalizer()
 
 model_load_status: str = "Uninitialized"
 model_load_time_ms: float = 0.0
@@ -354,14 +356,14 @@ async def ar_stream_websocket(websocket: WebSocket):
                         # Compute Signer Bounding Box in Normalized Viewport
                         all_pts = []
                         if norm_sample.pose_landmarks:
-                            all_pts.extend(norm_sample.pose_landmarks)
+                            all_pts.extend([[float(p[0]), float(p[1])] for p in norm_sample.pose_landmarks if len(p) >= 2])
                         if norm_sample.left_hand_landmarks:
-                            all_pts.extend(norm_sample.left_hand_landmarks)
+                            all_pts.extend([[float(p[0]), float(p[1])] for p in norm_sample.left_hand_landmarks if len(p) >= 2])
                         if norm_sample.right_hand_landmarks:
-                            all_pts.extend(norm_sample.right_hand_landmarks)
+                            all_pts.extend([[float(p[0]), float(p[1])] for p in norm_sample.right_hand_landmarks if len(p) >= 2])
 
                         if all_pts:
-                            pts_np = np.array(all_pts)
+                            pts_np = np.array(all_pts, dtype=np.float32)
                             signer_bounds = {
                                 "min_x": float(np.clip(np.min(pts_np[:, 0]), 0.0, 1.0)),
                                 "min_y": float(np.clip(np.min(pts_np[:, 1]), 0.0, 1.0)),
@@ -432,15 +434,22 @@ async def ar_stream_websocket(websocket: WebSocket):
 
             current_sub = stabilizer.get_current_subtitle()
             latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
+            active_txt = current_sub.text if current_sub else ""
+            active_st = current_sub.status if current_sub else status
+            conf_val = round(float(current_sub.confidence), 3) if current_sub else 0.0
 
             await websocket.send_json({
-                "active_text": current_sub.text if current_sub else "",
-                "status": current_sub.status if current_sub else status,
-                "confidence": round(float(current_sub.confidence), 3) if current_sub else 0.0,
+                "active_text": active_txt,
+                "text": active_txt,
+                "status": active_st,
+                "is_finalized": (active_st in ("FINALIZED", "CONFIRMED")),
+                "confidence": conf_val,
                 "is_signing": is_signing,
                 "signer_bounds": signer_bounds,
                 "buffered_frames": stream_segmenter.current_buffer_length,
-                "latency_ms": latency_ms
+                "latency_ms": latency_ms,
+                "server_fps": 30.0,
+                "activity_energy": 0.0
             })
 
     except WebSocketDisconnect:

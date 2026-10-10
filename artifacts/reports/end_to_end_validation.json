@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-10-10 17:13:28",
+  "total_elapsed_sec": 11.11,
+  "webcam": {
+    "available": true,
+    "info": "Accessible (640x480)"
+  },
+  "model": {
+    "num_params": 10064008,
+    "mean_latency_ms": 852.12,
+    "p95_latency_ms": 921.28,
+    "sample_output": "and candidate unusual much... much... much... much... much... much... much... much... much... much... much... much... much... much... much... much... much... much...",
+    "sample_confidence": 0.0122
+  },
+  "streaming": {
+    "frames_processed": 50,
+    "mean_frame_lat_ms": 1.87,
+    "p95_frame_lat_ms": 2.64,
+    "provisional_count": 0,
+    "finalized_count": 0,
+    "final_transcript_count": 0
+  },
+  "websocket": {
+    "streamed_frames": 5,
+    "mean_rtt_ms": 6.4,
+    "p95_rtt_ms": 7.23,
+    "sample_packet": {
+      "active_text": "",
+      "text": "",
+      "status": "IDLE",
+      "is_finalized": false,
+      "confidence": 0.0,
+      "is_signing": true,
+      "signer_bounds": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "max_x": 0.5000000596046448,
+        "max_y": 0.0,
+        "detected": true
+      },
+      "buffered_frames": 6,
+      "latency_ms": 4.2,
+      "server_fps": 30.0,
+      "activity_energy": 0.0
+    }
+  },
+  "stabilization": true,
+  "resilience": true,
+  "resources": {
+    "rss_ram_mb": 594.95,
+    "vms_mb": 965.62,
+    "cuda_allocated_mb": 0.0,
+    "cuda_available": false
+  }
+}

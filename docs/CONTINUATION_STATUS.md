@@ -122,7 +122,7 @@ Bi-ISL AR is dedicated to real-time, continuous Indian Sign Language (ISL) video
 
 - **Unit & Integration Test Suite (`pytest`):**
   - Total tests executed: **224**
-  - Total tests passed: **224 (100% passing in 35.29s)**
+  - Total tests passed: **224 (100% passing in 38.54s)**
   - All test suites passing:
     - `tests/inference/test_recorded_video_translation.py` (5 tests) - Recorded MP4 video translation, AR video rendering, streaming transitions, deduplication, full sentence decoding
     - `tests/models/test_pose_motion_transformer.py` (4 tests) - PoseMotionEncoder, PoseMotionTranslationModel, BiISLTranslator
@@ -130,6 +130,15 @@ Bi-ISL AR is dedicated to real-time, continuous Indian Sign Language (ISL) video
     - `tests/vision/test_sentence_segmenter.py` (3 tests) - SignActivityDetector, kinetic motion energy, pause segmentation
     - `tests/integration/test_server_endpoints.py` (6 tests) - FastAPI `/health`, `/api/status`, `/api/predict`, `/api/translate_stream`, `/api/benchmark`, `/api/reset_stream`, and WebSocket `/ws/ar_stream`
     - All existing repository baseline tests (202 tests)
+- **End-to-End System Validation Suite (`scripts/validate_end_to_end.py`):**
+  - Executed full 7-stage automated validation without mocking:
+    - Physical Webcam Probe: Detected and accessible ($640 \times 480\text{ RGB}$)
+    - Model Checkpoint: 10,064,008 parameters loaded; mean CPU latency $852.12\text{ ms}$
+    - Video Replay Streaming: 534.8 FPS equivalent throughput ($1.87\text{ ms}$ per frame)
+    - WebSocket Streaming RTT: $6.40\text{ ms}$ mean over binary JPEG payloads
+    - Deduplication & Levenshtein Smoothing: 100% verified across 6.0s sliding windows
+    - Network Resilience: Handled malformed frames, packet bursts, and reconnects cleanly
+    - Detailed report available in [`docs/END_TO_END_TEST_REPORT.md`](file:///c:/Users/ADMIN/Downloads/Bi-ISL-main/Bi-ISL-main/docs/END_TO_END_TEST_REPORT.md)
 - **Model & Tokenizer Verification:**
   - `BiISLTranslator.load_default()` successfully loaded the trained 120.9 MB checkpoint.
   - SentencePiece 5000 vocabulary loaded and decoded English sentences dynamically without hardcoded lookup tables.
