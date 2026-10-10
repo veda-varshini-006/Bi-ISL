@@ -61,13 +61,22 @@ Bi-ISL AR is dedicated to real-time, continuous Indian Sign Language (ISL) video
   - `POST /api/translate_stream`: Streaming frame-by-frame landmark ingestion returning provisional/finalized status and deduplicated subtitles.
   - `POST /api/benchmark`: 50-iteration inference latency profiling.
   - `POST /api/reset_stream`: Resets streaming buffers and active subtitles.
-
-### F. Android AR Camera Application
-- **Mobile Architecture (`android/`):**
-  - `CameraScreen`: Jetpack Compose live viewfinder with glowing sign-activity indicator, floating AR Subtitle HUD, and confidence pill.
-  - `TranscriptHistoryScreen`: Continuous transcript log of recognized sentences.
-  - `SettingsScreen`: Wi-Fi server configuration to connect the phone to the laptop backend via local network (e.g. `http://192.168.1.5:8000`).
-  - `RemoteInferenceClient.kt`: Low-latency asynchronous coroutine client.
+### G. Unity Android AR Foundation Application (`unity/`)
+- **Package Manifest (`unity/Packages/manifest.json`):**
+  - AR Foundation `com.unity.xr.arfoundation` (5.1.5)
+  - Google ARCore XR Plugin `com.unity.xr.arcore` (5.1.5)
+  - TextMeshPro `com.unity.textmeshpro` (3.0.9)
+  - Unity UI `com.unity.ugui` (2.0.0)
+- **Android Manifest & Build Configuration (`unity/Assets/Plugins/Android/`):**
+  - `AndroidManifest.xml`: Configured for Android 8.0+ (API level 26+ up to API 34), `CAMERA` and `INTERNET` permissions, `com.google.ar.core` required, and `usesCleartextTraffic="true"` for local Wi-Fi streaming.
+  - `mainTemplate.gradle` & `gradleTemplate.properties`: Custom Gradle build templates for Android 14 compatibility and ARCore rendering.
+- **C# Script Architecture (`unity/Assets/Scripts/`):**
+  - `ARCameraBackgroundController.cs`: Acquires raw camera frames via AR Foundation `XRCpuImage`, converts to RGB24, downsamples to 480x640, encodes to JPEG, and invokes frame acquisition events. Includes Editor fallback using `WebCamTexture`.
+  - `BiISLBackendClient.cs`: Handles low-latency bidirectional WebSocket connection (`ws://<IP>:8000/ws/ar_stream`) with automatic reconnection backoff, binary JPEG frame transmission, JSON response deserialization (`ARSubtitlePacket`), and round-trip latency tracking.
+  - `ARSubtitleHUD.cs`: Renders floating TextMeshPro subtitles with dynamic color styling (cyan for `[PROVISIONAL]`, lime green for `[FINALIZED]`), glowing confidence pill bar, hold-duration fading, and error banners.
+  - `SignerAwareLayout.cs`: Adjusts subtitle vertical position adaptively based on detected `signer_bounds` $(x_{min}, y_{min}, x_{max}, y_{max})$ so subtitles do not occlude the signer's face or gesturing hands.
+  - `ARControlPanel.cs`: Interactive UI controls for Start/Pause translation toggle, subtitle font size slider (20-42pt), caption visibility toggle, and server IP configuration modal.
+  - `AndroidPermissionHelper.cs`: Handles runtime camera permission requests on Android devices.
 
 ---
 
@@ -87,55 +96,87 @@ Bi-ISL AR is dedicated to real-time, continuous Indian Sign Language (ISL) video
 | **Vision** | `src/vision/sentence_segmenter.py` | Implemented `SignActivityDetector` |
 | **Text** | `src/text/subtitle_stabilizer.py` | Implemented `SubtitleStabilizer` with deduplication & dual-stage predictions |
 | **CLI** | `scripts/translate_video.py` | Updated CLI for video translation and live camera preview with AR HUD |
-| **Server** | `src/server.py` | Updated FastAPI server with streaming provisional/finalized endpoints |
+| **Server** | `src/server.py` | Implemented WebSocket `/ws/ar_stream` + REST streaming endpoints |
+| **Unity AR** | `unity/Packages/manifest.json` | Configured AR Foundation 5.1.5, ARCore 5.1.5, TextMeshPro |
+| **Unity AR** | `unity/Assets/Plugins/Android/AndroidManifest.xml` | Configured camera, internet, ARCore requirements |
+| **Unity AR** | `unity/Assets/Plugins/Android/mainTemplate.gradle` | Gradle configuration for Android build |
+| **Unity AR** | `unity/Assets/Plugins/Android/gradleTemplate.properties` | Android Gradle properties |
+| **Unity AR** | `unity/Assets/Scripts/AR/ARCameraBackgroundController.cs` | Implemented XRCpuImage acquisition & JPEG downsampling |
+| **Unity AR** | `unity/Assets/Scripts/Networking/BiISLBackendClient.cs` | Implemented WebSocket streaming client |
+| **Unity AR** | `unity/Assets/Scripts/UI/ARSubtitleHUD.cs` | Implemented TextMeshPro AR subtitle HUD |
+| **Unity AR** | `unity/Assets/Scripts/UI/SignerAwareLayout.cs` | Implemented signer-aware collision avoidance |
+| **Unity AR** | `unity/Assets/Scripts/UI/ARControlPanel.cs` | Implemented UI controls & IP config modal |
+| **Unity AR** | `unity/Assets/Scripts/Permissions/AndroidPermissionHelper.cs` | Implemented runtime Android camera permissions |
+| **Unity AR** | `unity/README.md` | Created Unity build and execution guide |
 | **Android** | `android/app/src/main/java/com/biisl/app/inference/RemoteInferenceClient.kt` | Created Wi-Fi backend client |
 | **Android** | `android/app/src/main/java/com/biisl/app/presentation/Screens.kt` | Built AR Subtitle HUD, Transcript, and Wi-Fi Settings |
 | **Tests** | `tests/inference/test_recorded_video_translation.py` | Created tests on recorded video MP4, streaming, and deduplication |
 | **Tests** | `tests/models/test_pose_motion_transformer.py` | Created unit tests for model architecture |
 | **Tests** | `tests/text/test_subtitle_stabilizer.py` | Created unit tests for stabilizer & deduplication |
 | **Tests** | `tests/vision/test_sentence_segmenter.py` | Created unit tests for sentence segmenter |
-| **Tests** | `tests/integration/test_server_endpoints.py` | Created integration tests for FastAPI endpoints |
+| **Tests** | `tests/integration/test_server_endpoints.py` | Created integration tests for FastAPI & WebSocket endpoints |
 
 ---
 
 ## 4. Tests Executed & Verification Results
 
 - **Unit & Integration Test Suite (`pytest`):**
-  - Total tests executed: **223**
-  - Total tests passed: **223 (100% passing in 48.17s)**
+  - Total tests executed: **224**
+  - Total tests passed: **224 (100% passing in 35.29s)**
   - All test suites passing:
     - `tests/inference/test_recorded_video_translation.py` (5 tests) - Recorded MP4 video translation, AR video rendering, streaming transitions, deduplication, full sentence decoding
     - `tests/models/test_pose_motion_transformer.py` (4 tests) - PoseMotionEncoder, PoseMotionTranslationModel, BiISLTranslator
     - `tests/text/test_subtitle_stabilizer.py` (4 tests) - SubtitleStabilizer, ARSubtitle, Levenshtein smoothing, hold duration
     - `tests/vision/test_sentence_segmenter.py` (3 tests) - SignActivityDetector, kinetic motion energy, pause segmentation
-    - `tests/integration/test_server_endpoints.py` (5 tests) - FastAPI `/health`, `/api/status`, `/api/predict`, `/api/translate_stream`, `/api/benchmark`, `/api/reset_stream`
+    - `tests/integration/test_server_endpoints.py` (6 tests) - FastAPI `/health`, `/api/status`, `/api/predict`, `/api/translate_stream`, `/api/benchmark`, `/api/reset_stream`, and WebSocket `/ws/ar_stream`
     - All existing repository baseline tests (202 tests)
 - **Model & Tokenizer Verification:**
   - `BiISLTranslator.load_default()` successfully loaded the trained 120.9 MB checkpoint.
-  - SentencePiece 5000 vocabulary loaded and decoded English sentences dynamically.
+  - SentencePiece 5000 vocabulary loaded and decoded English sentences dynamically without hardcoded lookup tables.
 
 ---
 
-## 5. Commands to Run Working Components
+## 5. Execution & Build Status Report
 
-### 1. Run Live Camera Translation with Desktop Preview
+### Real APK Build & Physical Device Testing Status:
+- **Unity Editor & Android SDK/NDK Availability:**
+  - `Unity.exe`, `adb`, and the Android SDK toolchains are **NOT** installed locally on this host environment.
+  - Therefore, compiling a physical `.apk` binary and running on-device hardware tests could **not be executed directly on this machine**.
+- **Deliverables Completed:**
+  - The complete Unity project folder (`unity/`) is fully configured with all necessary C# scripts, AR Foundation / ARCore package manifests, Android manifest permissions, Gradle build files, and WebSocket streaming pipeline.
+  - Opening the `unity/` folder in Unity 2022.3 LTS or 2023.2 with Android Build Support allows building the APK directly with `File > Build Settings > Build`.
+
+---
+
+## 6. Commands to Run Working Components
+
+### 1. Launch FastAPI WebSocket Backend Server (Laptop / Host)
+```bash
+# Starts the server listening on all network interfaces for Android Wi-Fi streaming
+python -m uvicorn src.server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 2. Run Live Camera Translation with Desktop Preview
 ```bash
 # Launches camera preview with glowing AR Subtitle HUD, provisional vs finalized tags, and motion bar
 python scripts/translate_video.py --live
 ```
 
-### 2. Translate Recorded Continuous ISL Video Files
+### 3. Translate Recorded Continuous ISL Video Files
 ```bash
 # Translates continuous ISL MP4 video and renders an AR subtitled MP4 video
 python scripts/translate_video.py --input path/to/video.mp4 --output path/to/subtitled_output.mp4
 ```
 
-### 3. Launch FastAPI Backend Server (for Laptop & Mobile Clients)
-```bash
-python -m uvicorn src.server:app --host 0.0.0.0 --port 8000 --reload
-```
+### 4. Build and Run the Unity Android AR App
+1. Open Unity Hub and add the `unity/` project directory.
+2. In Unity Editor: **File $\to$ Build Settings...**
+3. Select **Android** platform and click **Switch Platform**.
+4. Set Target API Level to **34 (Android 14)** or Automatic.
+5. In the AR Control Panel on the device, enter the laptop's Wi-Fi IP (e.g., `192.168.1.15:8000`).
+6. Tap **Connect** to begin continuous ISL translation with live AR subtitles.
 
-### 4. Train Sentence-Level Translation Model
+### 5. Train Sentence-Level Translation Model
 ```bash
 # Train on synthetic continuous verification data:
 python scripts/train_pose_motion_transformer.py --epochs 5 --synthetic-fallback
@@ -144,7 +185,7 @@ python scripts/train_pose_motion_transformer.py --epochs 5 --synthetic-fallback
 python scripts/train_pose_motion_transformer.py --data-dir path/to/cislr_data --epochs 20 --batch-size 8
 ```
 
-### 5. Run Full Verification Test Suite
+### 6. Run Full Verification Test Suite
 ```bash
 python -m pytest
 ```

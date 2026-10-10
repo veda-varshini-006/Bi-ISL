@@ -17,9 +17,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 # Ensure src module can be imported
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -27,6 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.models.pose_motion_transformer import BiISLTranslator
 from src.text.subtitle_stabilizer import SubtitleStabilizer, ARSubtitle
 from src.vision.sentence_segmenter import SignActivityDetector
+from src.vision.landmark_extractor import LandmarkExtractor
+from src.vision.normalizer import LandmarkNormalizer
 
 app = FastAPI(
     title="Bi-ISL AR Real-Time Translation API",
@@ -291,12 +298,155 @@ def translate_stream(req: StreamingFrameRequest):
     }
 
 
+landmark_extractor = LandmarkExtractor()
+normalizer = LandmarkNormalizer()
+
+
 @app.post("/api/reset_stream")
 def reset_stream():
     """Resets stream buffer and active subtitles."""
     stream_segmenter.reset()
     stabilizer.clear()
     return {"status": "reset_successful"}
+
+
+@app.websocket("/ws/ar_stream")
+async def ar_stream_websocket(websocket: WebSocket):
+    """High-performance WebSocket stream endpoint for Unity Android AR application.
+
+    Receives camera frame JPEG bytes or landmark JSON packets over local Wi-Fi,
+    streams back real-time provisional/finalized AR subtitles with signer bounding box.
+    """
+    await websocket.accept()
+    print("[WebSocket] Unity AR client connected to /ws/ar_stream.")
+
+    try:
+        while True:
+            message = await websocket.receive()
+            start_t = time.perf_counter()
+
+            kps_75 = None
+            signer_bounds = {"min_x": 0.0, "min_y": 0.0, "max_x": 1.0, "max_y": 1.0, "detected": False}
+
+            # 1. Binary JPEG frame from camera
+            if "bytes" in message and message["bytes"]:
+                raw_bytes = message["bytes"]
+                if cv2 is not None:
+                    nparr = np.frombuffer(raw_bytes, np.uint8)
+                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                    if frame is not None:
+                        raw_sample = landmark_extractor.extract_landmarks(frame, frame_index=0, timestamp_sec=time.time())
+                        norm_sample = normalizer.normalize_sample(raw_sample)
+
+                        p_kps = np.array(norm_sample.pose_landmarks, dtype=np.float32)[:, :3] if norm_sample.pose_landmarks else np.zeros((33, 3), dtype=np.float32)
+                        lh_kps = np.array(norm_sample.left_hand_landmarks, dtype=np.float32)[:, :3] if norm_sample.left_hand_landmarks else np.zeros((21, 3), dtype=np.float32)
+                        rh_kps = np.array(norm_sample.right_hand_landmarks, dtype=np.float32)[:, :3] if norm_sample.right_hand_landmarks else np.zeros((21, 3), dtype=np.float32)
+
+                        if len(p_kps) < 33:
+                            p_kps = np.pad(p_kps, ((0, 33 - len(p_kps)), (0, 0)))
+                        if len(lh_kps) < 21:
+                            lh_kps = np.pad(lh_kps, ((0, 21 - len(lh_kps)), (0, 0)))
+                        if len(rh_kps) < 21:
+                            rh_kps = np.pad(rh_kps, ((0, 21 - len(rh_kps)), (0, 0)))
+
+                        kps_75 = np.vstack([p_kps[:33], lh_kps[:21], rh_kps[:21]])
+
+                        # Compute Signer Bounding Box in Normalized Viewport
+                        all_pts = []
+                        if norm_sample.pose_landmarks:
+                            all_pts.extend(norm_sample.pose_landmarks)
+                        if norm_sample.left_hand_landmarks:
+                            all_pts.extend(norm_sample.left_hand_landmarks)
+                        if norm_sample.right_hand_landmarks:
+                            all_pts.extend(norm_sample.right_hand_landmarks)
+
+                        if all_pts:
+                            pts_np = np.array(all_pts)
+                            signer_bounds = {
+                                "min_x": float(np.clip(np.min(pts_np[:, 0]), 0.0, 1.0)),
+                                "min_y": float(np.clip(np.min(pts_np[:, 1]), 0.0, 1.0)),
+                                "max_x": float(np.clip(np.max(pts_np[:, 0]), 0.0, 1.0)),
+                                "max_y": float(np.clip(np.max(pts_np[:, 1]), 0.0, 1.0)),
+                                "detected": True
+                            }
+
+            # 2. JSON text message (pre-extracted landmarks or ping/command)
+            elif "text" in message and message["text"]:
+                import json
+                try:
+                    payload = json.loads(message["text"])
+                    if payload.get("command") == "reset":
+                        stream_segmenter.reset()
+                        stabilizer.clear()
+                        await websocket.send_json({"status": "reset_ack"})
+                        continue
+                    elif payload.get("command") == "ping":
+                        await websocket.send_json({"status": "pong", "time": time.time()})
+                        continue
+
+                    raw_lms = payload.get("landmarks")
+                    if raw_lms:
+                        arr = np.array(raw_lms, dtype=np.float32)
+                        if arr.ndim == 1 and len(arr) >= 225:
+                            kps_75 = arr[:225].reshape(75, 3)
+                        elif arr.ndim == 2 and arr.shape == (75, 3):
+                            kps_75 = arr
+                except Exception as e:
+                    pass
+
+            if kps_75 is None:
+                kps_75 = np.zeros((75, 3), dtype=np.float32)
+
+            # Process through sign activity segmenter
+            is_signing, completed_seq = stream_segmenter.process_frame(kps_75)
+
+            status = "IDLE"
+            if completed_seq is not None and len(completed_seq) >= 15:
+                arr = np.array(completed_seq, dtype=np.float32)
+                tensor_raw = torch.from_numpy(arr).to(dtype=torch.float32)
+                tensor_flat = tensor_raw.reshape(len(arr), 225).permute(1, 0).unsqueeze(0)
+                tensor_resampled = torch.nn.functional.interpolate(
+                    tensor_flat, size=128, mode="linear", align_corners=False
+                )
+                arr_128 = tensor_resampled.squeeze(0).permute(1, 0).reshape(128, 75, 3).numpy()
+
+                new_text, conf = translator.translate(arr_128, return_confidence=True)
+                if new_text and len(new_text.strip()) > 0:
+                    final_sub = stabilizer.update_finalized(new_text, conf)
+                    if final_sub:
+                        status = "FINALIZED"
+            elif is_signing and stream_segmenter.current_buffer_length >= 15:
+                status = "PROVISIONAL"
+                if stream_segmenter.current_buffer_length % 12 == 0:
+                    current_buf = stream_segmenter.active_buffer
+                    arr = np.array(current_buf, dtype=np.float32)
+                    tensor_raw = torch.from_numpy(arr).to(dtype=torch.float32)
+                    tensor_flat = tensor_raw.reshape(len(arr), 225).permute(1, 0).unsqueeze(0)
+                    tensor_resampled = torch.nn.functional.interpolate(
+                        tensor_flat, size=128, mode="linear", align_corners=False
+                    )
+                    arr_128 = tensor_resampled.squeeze(0).permute(1, 0).reshape(128, 75, 3).numpy()
+                    prov_text, conf = translator.translate(arr_128, return_confidence=True)
+                    if prov_text and len(prov_text.strip()) > 0:
+                        prov_sub = stabilizer.update_provisional(prov_text, conf)
+
+            current_sub = stabilizer.get_current_subtitle()
+            latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
+
+            await websocket.send_json({
+                "active_text": current_sub.text if current_sub else "",
+                "status": current_sub.status if current_sub else status,
+                "confidence": round(float(current_sub.confidence), 3) if current_sub else 0.0,
+                "is_signing": is_signing,
+                "signer_bounds": signer_bounds,
+                "buffered_frames": stream_segmenter.current_buffer_length,
+                "latency_ms": latency_ms
+            })
+
+    except WebSocketDisconnect:
+        print("[WebSocket] Unity AR client disconnected.")
+    except Exception as e:
+        print(f"[WebSocket] Stream error: {e}")
 
 
 @app.post("/api/benchmark")

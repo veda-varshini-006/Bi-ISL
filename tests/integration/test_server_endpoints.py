@@ -55,3 +55,25 @@ def test_reset_stream_endpoint(client):
     res = client.post("/api/reset_stream")
     assert res.status_code == 200
     assert res.json()["status"] == "reset_successful"
+
+
+def test_ar_stream_websocket(client):
+    with client.websocket_connect("/ws/ar_stream") as ws:
+        # 1. Ping command
+        ws.send_json({"command": "ping"})
+        pong = ws.receive_json()
+        assert pong["status"] == "pong"
+
+        # 2. Landmark frame
+        dummy_kps = np.random.randn(75, 3).tolist()
+        ws.send_json({"landmarks": dummy_kps})
+        reply = ws.receive_json()
+        assert "status" in reply
+        assert "signer_bounds" in reply
+        assert "latency_ms" in reply
+
+        # 3. Reset command
+        ws.send_json({"command": "reset"})
+        ack = ws.receive_json()
+        assert ack["status"] == "reset_ack"
+

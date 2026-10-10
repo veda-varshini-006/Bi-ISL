@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "com.unity.xr.arfoundation": "5.1.5",
+    "com.unity.xr.arcore": "5.1.5",
+    "com.unity.textmeshpro": "3.0.9",
+    "com.unity.ugui": "2.0.0",
+    "com.unity.modules.androidjni": "1.0.0",
+    "com.unity.modules.camera": "1.0.0",
+    "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.modules.unitywebrequest": "1.0.0",
+    "com.unity.modules.xr": "1.0.0"
+  }
+}

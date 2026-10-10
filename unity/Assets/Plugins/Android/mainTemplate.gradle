@@ -1,0 +1,44 @@
+// Unity Android Gradle Build Template for Bi-ISL AR
+apply plugin: 'com.android.application'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'com.google.ar:core:1.41.0'
+}
+
+android {
+    namespace "com.biisl.ar"
+    compileSdkVersion 34
+    buildToolsVersion "34.0.0"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        minSdkVersion 26
+        targetSdkVersion 34
+        applicationId "com.biisl.ar"
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    packagingOptions {
+        pickFirst 'lib/arm64-v8a/libarcore_sdk_c.so'
+    }
+
+    aaptOptions {
+        noCompress = ['.unity3d', '.ress', '.resource', '.obb', '.bundle']
+        ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~"
+    }
+}
