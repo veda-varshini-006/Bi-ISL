@@ -192,7 +192,16 @@ class BiISLTranslator:
             ):
                 logits = self.model(pose_in, generated)
 
-            last_logits = logits[:, -1, :]
+            last_logits = logits[:, -1, :].clone()
+
+            # Apply repetition penalty to avoid degenerate infinite repeating tokens
+            repetition_penalty = 1.6
+            for prev_token in set(generated[0].tolist()):
+                if last_logits[0, prev_token] > 0:
+                    last_logits[0, prev_token] /= repetition_penalty
+                else:
+                    last_logits[0, prev_token] *= repetition_penalty
+
             probs = torch.softmax(last_logits, dim=-1)
             next_id = int(probs.argmax(dim=-1).item())
             prob_val = float(probs[0, next_id].item())

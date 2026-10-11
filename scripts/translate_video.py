@@ -37,13 +37,30 @@ def run_live_webcam_translation(
     print("  Press 'q' or ESC in the preview window to exit.")
     print("=" * 70)
 
-    cap = cv2.VideoCapture(camera_id)
-    if not cap.isOpened():
+    print(f"[Info] Initializing camera index {camera_id}...")
+    cap = None
+    if sys.platform == "win32":
+        cap = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            if cap:
+                cap.release()
+            cap = cv2.VideoCapture(camera_id)
+    else:
+        cap = cv2.VideoCapture(camera_id)
+
+    if not cap or not cap.isOpened():
         print(f"[Error] Could not open camera {camera_id}.")
         return
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    ret, test_frame = cap.read()
+    if not ret or test_frame is None:
+        print(f"[Error] Camera {camera_id} opened but failed to capture frames.")
+        cap.release()
+        return
+
+    actual_w = test_frame.shape[1]
+    actual_h = test_frame.shape[0]
+    print(f"[Info] Live camera stream active: {actual_w}x{actual_h} resolution.")
 
     streamer = StreamingTranslator(
         translator=translator.translator,
