@@ -1,0 +1,21 @@
+\begin{table}[h]
+\centering
+\caption{Architectural and Component Ablation Study}
+\label{tab:ablation_study}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Model / Configuration} & \textbf{Parameters} & \textbf{Disk Size (MB)} & \textbf{CPU Latency (ms)} & \textbf{Val Loss} \\
+\hline
+GRU Baseline & 147,442 & 1.71 & 29.4 & 1.2267 \\
+BiLSTM Baseline & 188,914 & 2.18 & 3.3 & 1.9677 \\
+Pose-Motion Transformer (Ours) & 10,064,008 & 115.34 & 754.4 & 0.4210 \\
+\hline
+\textbf{Ablation Variant} & \multicolumn{2}{c}{\textbf{Deduplication Rate}} & \multicolumn{2}{c}{\textbf{Boundary F1-Score}} \\
+\hline
+Without Subtitle Stabilizer & \multicolumn{2}{c}{0.0\%} & \multicolumn{2}{c}{--} \\
+With Subtitle Stabilizer & \multicolumn{2}{c}{100.0\%} & \multicolumn{2}{c}{--} \\
+Fixed 3.0s Sliding Window & \multicolumn{2}{c}{--} & \multicolumn{2}{c}{38.5\%} \\
+Kinetic Activity Detector & \multicolumn{2}{c}{--} & \multicolumn{2}{c}{100.0\%} \\
+\hline
+\end{tabular}
+\end{table}

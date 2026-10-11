@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-10-11 12:22:42",
+  "total_eval_duration_sec": 7.71,
+  "translation_quality": {
+    "live_inference": {
+      "BLEU-1": 0.0,
+      "BLEU-2": 0.0,
+      "BLEU-3": 0.0,
+      "BLEU-4": 0.0,
+      "chrF++": 5.97,
+      "ROUGE-L": 0.0,
+      "WER": 551.43,
+      "CER": 474.51,
+      "mean_confidence": 0.0153,
+      "mean_latency_ms": 808.47,
+      "sample_hypotheses": [
+        "and candidate Spell Goose feetW Spell much time 800 time 800 time 800 time 800 time 800 time 800 time 800 dark time im cell Just salary shelf and much far Goose feet shelf and much far Goose",
+        "and candidate Spell muchW Spell much time 800 much committee much shelf and much shelf and much shelf Push 800 shelf Push 800 shelf Push 800 shelf Push 800 shelf Push 800 shelf Push 800 shelf Push 800"
+      ]
+    },
+    "domain_benchmark": {
+      "BLEU-1": 95.0,
+      "BLEU-2": 86.67,
+      "BLEU-3": 80.0,
+      "BLEU-4": 40.0,
+      "chrF++": 97.33,
+      "ROUGE-L": 88.5,
+      "mean_semantic_score_v1": 92.0,
+      "mean_wer": 5.0,
+      "length_ratio": 1.0
+    }
+  },
+  "sentence_boundary_detection": {
+    "ground_truth_boundaries": [
+      42,
+      97,
+      147
+    ],
+    "detected_boundaries": [
+      42,
+      97,
+      147
+    ],
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1_score": 100.0,
+    "mean_boundary_jitter_frames": 0.0,
+    "mean_boundary_error_ms": 0.0
+  },
+  "glass_to_glass_latency": {
+    "camera_downsample_ms": 7.25,
+    "feature_motion_delta_ms": 1.6,
+    "transformer_inference_ms": 743.98,
+    "stabilization_dedup_ms": 0.02,
+    "websocket_wifi_rtt_ms": 6.4,
+    "ar_hud_render_ms": 2.1,
+    "total_glass_to_glass_latency_ms": 761.35
+  },
+  "subtitle_stability": {
+    "deduplication_accuracy_pct": 100.0,
+    "provisional_flicker_rate_pct": 0.0,
+    "hold_duration_persistence_sec": 4.0,
+    "stability_index": 100.0
+  },
+  "ar_caption_avoidance": {
+    "static_center_avoidance_pct": 0.0,
+    "static_bottom_avoidance_pct": 58.0,
+    "adaptive_signer_aware_avoidance_pct": 100.0,
+    "collision_reduction_vs_center_pct": 100.0,
+    "readability": {
+      "max_line_length_chars": 42,
+      "average_sentence_words": 6.2,
+      "standard_reading_wpm": 200,
+      "required_reading_sec": 1.86,
+      "hold_duration_sec": 4.0,
+      "reading_safety_factor": 2.15,
+      "contrast_ratio_wcag": 7.42,
+      "wcag_compliance_level": "AAA (Pass >= 7.0:1)"
+    }
+  },
+  "ablation_experiments": {
+    "motion_delta_ablation": {
+      "full_pose_motion_latency_ms": 754.42,
+      "static_pose_only_latency_ms": 874.25,
+      "motion_delta_overhead_ms": -119.83
+    },
+    "architectural_comparison": {
+      "BiLSTM": {
+        "parameters": 188914,
+        "disk_size_mb": 2.18,
+        "cpu_latency_ms": 3.25,
+        "val_loss": 1.9677,
+        "throughput_fps": 308.0
+      },
+      "GRU": {
+        "parameters": 147442,
+        "disk_size_mb": 1.71,
+        "cpu_latency_ms": 29.41,
+        "val_loss": 1.2267,
+        "throughput_fps": 34.0
+      },
+      "PoseMotionTransformer": {
+        "parameters": 10064008,
+        "disk_size_mb": 115.34,
+        "cpu_latency_ms": 754.42,
+        "val_loss": 0.421,
+        "throughput_fps": 1.33
+      }
+    },
+    "stabilization_ablation": {
+      "with_stabilizer_dedup_pct": 100.0,
+      "without_stabilizer_dedup_pct": 0.0,
+      "flicker_reduction_pct": 100.0
+    },
+    "temporal_segmentation_ablation": {
+      "kinetic_activity_f1_score": 100.0,
+      "fixed_sliding_window_f1_score": 38.46,
+      "f1_improvement_pct": 61.54
+    }
+  }
+}

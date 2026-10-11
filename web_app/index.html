@@ -27,7 +27,7 @@
       </div>
       <div class="chip pte-chip">
         <span class="label">Model:</span>
-        <span id="modelTag">baseline_best_v1.pt</span>
+        <span id="modelTag">PositionMotionTransformer_finetune_lr1e5_latest.pt</span>
       </div>
       <div class="chip latency-chip">
         <span class="label">p95 Latency:</span>
@@ -70,7 +70,10 @@
             <div class="card-header">
               <h2><span class="icon">🎥</span> Camera & MediaPipe Live Landmarks</h2>
               <div class="controls-row">
-                <button id="btnWebcam" class="btn btn-primary">Start Webcam</button>
+                <button id="btnWebcam" class="btn btn-primary">Start Live Camera</button>
+                <button id="btnSampleVideo" class="btn btn-secondary">Play Sample Sign Video</button>
+                <button id="btnUploadVideo" class="btn btn-secondary">Upload Video</button>
+                <input type="file" id="videoFileInput" accept="video/mp4,video/webm" style="display:none;" />
               </div>
             </div>
             <div class="video-container">

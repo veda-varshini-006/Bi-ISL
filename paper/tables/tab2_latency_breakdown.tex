@@ -1,0 +1,19 @@
+\begin{table}[h]
+\centering
+\caption{End-to-End Glass-to-Glass AR Subtitle Latency Breakdown}
+\label{tab:latency_breakdown}
+\begin{tabular}{lcc}
+\hline
+\textbf{Pipeline Stage} & \textbf{Latency (ms)} & \textbf{Percentage (\%)} \\
+\hline
+Camera Downsampling & 7.25 & 1.0 \\
+Pose Motion Extraction & 1.6 & 0.2 \\
+Transformer Forward Pass & 743.98 & 97.7 \\
+Subtitle Stabilizer & 0.02 & 0.0 \\
+Wi-Fi WebSocket RTT & 6.4 & 0.8 \\
+AR HUD Render & 2.1 & 0.3 \\
+\hline
+\textbf{Total Glass-to-Glass} & \textbf{761.35} & \textbf{100.0} \\
+\hline
+\end{tabular}
+\end{table}
